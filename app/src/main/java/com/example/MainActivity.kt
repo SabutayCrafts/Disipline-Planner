@@ -18,32 +18,23 @@
 
 package com.example
 
-import android.annotation.SuppressLint
-import android.graphics.Color
 import android.os.Bundle
-import android.view.ViewGroup
-import android.webkit.WebChromeClient
-import android.webkit.WebSettings
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.viewinterop.AndroidView
+import com.example.ui.DisciplineViewModel
+import com.example.ui.MainScreen
+import com.example.ui.theme.BackgroundNavy
 import com.example.ui.theme.MyApplicationTheme
 
 class MainActivity : ComponentActivity() {
+  private val viewModel: DisciplineViewModel by viewModels()
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
@@ -52,72 +43,12 @@ class MainActivity : ComponentActivity() {
         Surface(
           modifier = Modifier
             .fillMaxSize()
-            .testTag("discipline_planner_main_screen")
+            .testTag("discipline_planner_main_screen"),
+          color = BackgroundNavy
         ) {
-          DisciplinePlannerWebView()
+          MainScreen(viewModel = viewModel)
         }
       }
     }
-  }
-}
-
-@SuppressLint("SetJavaScriptEnabled")
-@Composable
-fun DisciplinePlannerWebView() {
-  var webViewRef: WebView? = remember { null }
-
-  BackHandler(enabled = true) {
-    if (webViewRef?.canGoBack() == true) {
-      webViewRef?.goBack()
-    }
-  }
-
-  Box(
-    modifier = Modifier
-      .fillMaxSize()
-      .statusBarsPadding()
-      .navigationBarsPadding()
-  ) {
-    AndroidView(
-      modifier = Modifier
-        .fillMaxSize()
-        .testTag("discipline_webview"),
-      factory = { context ->
-        WebView(context).apply {
-          layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-          )
-          setBackgroundColor(Color.parseColor("#0B1120"))
-
-          settings.apply {
-            javaScriptEnabled = true
-            domStorageEnabled = true
-            databaseEnabled = true
-            mediaPlaybackRequiresUserGesture = false
-            allowFileAccess = true
-            allowContentAccess = true
-            loadWithOverviewMode = true
-            useWideViewPort = true
-            cacheMode = WebSettings.LOAD_DEFAULT
-            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-          }
-
-          webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-              return false
-            }
-          }
-
-          webChromeClient = WebChromeClient()
-
-          loadUrl("file:///android_asset/index.html")
-          webViewRef = this
-        }
-      },
-      update = { webView ->
-        webViewRef = webView
-      }
-    )
   }
 }
