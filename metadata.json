@@ -1,6 +1,6 @@
 {
   "name": "Discipline Planner",
-  "description": "Daily discipline planner with 3D avatar customizer, 25-tier rank progression, and social squad leaderboard.",
+  "description": "Native Kotlin & Jetpack Compose daily discipline planner with active Focus distraction blocker, system Clock alarms, AZ/EN i18n, and 25-tier streak milestones.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

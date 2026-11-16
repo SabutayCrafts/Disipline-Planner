@@ -21,9 +21,9 @@
 
 ## 🌟 Overview
 
-**Discipline Planner** is a minimalist, distraction-free Android and Web self-mastery application engineered to build relentless consistency and unbroken daily habits.
+**Discipline Planner** is a 100% native Kotlin & Jetpack Compose self-mastery Android application engineered to build relentless consistency, block phone distractions during deep work, and sync daily habit reminders with your device's built-in Clock alarm system.
 
-Featuring a **3D Duolingo-styled animated vector avatar builder**, an **unfolding 25-tier Discipline Rank Catalog** (spanning from Day 1 to 3+ Years), an **on-page Community & Discipline Squad Search**, and **streak-unlockable legendary headwear**, the app turns daily accountability into an engaging, gamified journey without visual clutter or subscription paywalls.
+Featuring a **3-tab streamlined layout (`Today`, `Focus`, `Statistics`)**, an active **Focus Distraction Blocker (Do Not Disturb + Selected App Interception)**, **System Clock Alarm integration**, **bilingual Azerbaijani/English i18n**, and **25-tier streak milestones**, the app turns daily accountability into a high-focus, distraction-free experience with zero account requirements or paywalls.
 
 Developed and maintained by **[SabutayCrafts](https://github.com/SabutayCrafts)**.
 
@@ -31,70 +31,23 @@ Developed and maintained by **[SabutayCrafts](https://github.com/SabutayCrafts)*
 
 ## 🎯 Key Features
 
-### 1. 🎨 3D Vector Avatar & Identity Studio
-- **Duolingo-Inspired Character Engine**: Procedurally generated 3D vector character with smooth idle floating micro-animations (`@keyframes duolingoFloat`), chest breathing, and specular reflections.
-- **Visual Grid Selector (Zero Dropdowns)**: Interactive visual icon cards for:
-  - **Hairstyles**: Modern Quiff, Curly Afro, Spartan Topknot, Side Part, Undercut Fade, Clean Shaved.
-  - **Facial Hair**: Clean Shaven, 5 O'Clock Stubble, Spartan Full Beard, Royal Mustache, Van Dyke Goatee.
-  - **Eyewear**: Round Acetate Specs, Modern Bold Frames, Pilot Aviator Shades, Cyber HUD Visor.
-  - **Outfits**: Spartan Plate Armor, Discipline Athlete Hoodie, Minimalist Tee, Executive Blazer, Martial Arts Gi.
-  - **3D Skin Tones**: 8 high-depth gradient palettes from Fair to Deep Espresso, Titan Jade, and Mystic Violet.
-  - **Backdrop Auras**: Royal Sky, Spartan Nebula, Forest Titan, Solar Blaze, and Deep Cosmos.
-- **Interactive RPG Status Tags**: Equip active intent badges such as `⚡ Deep Focus`, `🔥 On Fire`, `🛡️ Iron Will`, `🧘 Zen Master`, `⚔️ In The Zone`, or `🚀 Unstoppable`.
+### 1. ✅ Today Execution & Native Clock Alarms
+- **Daily Habit Forge**: Create, categorize, edit, and complete daily habits with animated circular progress rings, tactile haptic feedback, and optional completion chimes.
+- **Native Phone Alarm Integration**: Attach optional daily reminder times to any habit and send them directly to your phone's built-in **Clock** app (`AlarmClock.ACTION_SET_ALARM`) for rock-solid system alarms.
+- **Broader Squarish Quick-Add Button**: Ergonomic card-shaped primary action button (`56dp × 52dp`, `12dp` corner radius).
 
-### 2. 👑 Streak-Unlockable Headwear & Legendary Equipment
-Earn and forge exclusive headwear artifacts simply by keeping your promises:
-- 🌿 **Golden Victor Laurel Wreath** — Unlocks at **7 Days Streak** (*Level 3 — Consistent*)
-- ⚔️ **Steel Knight Greathelm** — Unlocks at **14 Days Streak** (*Level 5 — Iron Foundation*)
-- 🛡️ **Spartan Bronze War Helmet** with red crest — Unlocks at **30 Days Streak** (*Level 7 — Unshakable*)
-- 👑 **Sovereign Gold Crown** with ruby gems — Unlocks at **60 Days Streak** (*Level 9 — Resilience Titan*)
-- 🌟 **Ascended Mystic Halo Aura** — Unlocks at **75 Days Streak** (*Level 10 — Mind Sculptor*)
-- 🏛️ **The Supreme Emperor Imperial Crown** — Unlocks at **365 Days Streak** (*Level 21 — One Year Legend*)
+### 2. 🛡️ Deep Focus Mode & Real Distraction Blocker
+- **Active App Interception**: Pick distracting apps installed on your device. While a Focus countdown is active, a compliant Foreground Service monitors app switches via `UsageStatsManager` and displays a full-screen **Focus Shield** overlay whenever a blocked app is opened.
+- **Auto Do Not Disturb (DND)**: Automatically silences incoming notifications during Focus sessions while keeping system alarms audible, and restores your previous DND state when the session ends.
+- **Flexible Durations**: 15, 25, 45, 60-minute presets plus custom duration support (`1–180 min`) with live notification countdown and stoic quotes.
 
-### 3. 🔍 On-Page Community Search & Discipline Squad
-- **Direct Search Bar**: Prominently situated atop the Profile section (`🔍 Search User ID or Name...`).
-- **Live Search Previews**: Instant matching as you type; preview friends' custom 3D avatars, active streak counts, and unlocked ranks.
-- **Single-Click Follow**: One-tap follow/unfollow toggle and custom ID addition (e.g., `#WARRIOR95`, `#STOIC01`).
-- **Squad Leaderboard**: Real-time sorted leaderboard comparing you against followed friends with podium badges (🥇, 🥈, 🥉) and interactive fist-bump cheers.
+### 3. 📊 Statistics & 25-Tier Streak Milestones
+- **Real Consistency Analytics**: Tracks Active Streak, Total Completions, Total Deep Focus minutes, a 7-day consistency heat strip, and Focus session history.
+- **25-Tier Discipline Milestones (Day 1 to 3+ Years)**: Progressive streak tiers from *Level 1 — Novice* up to *Level 25 — The Supreme Emperor (1095+ Days)* with visual progress bars and unlock filters (*All*, *Unlocked*, *Locked*).
 
-### 4. 🏆 Expanded 25-Tier Discipline Rank Catalog (Up to 3+ Years)
-An unyielding progression hierarchy tracking long-term character building:
-| Level | Day Target | Badge | Rank Title |
-|:---:|:---:|:---:|:---|
-| 1 | 1 Day | 🌱 | Novice |
-| 2 | 3 Days | 🌿 | First Spark |
-| 3 | 7 Days | 🔥 | Consistent (1 Full Week) |
-| 4 | 10 Days | ⚡ | Momentum Builder |
-| 5 | 14 Days | 🛡️ | Iron Foundation (2 Weeks) |
-| 6 | 21 Days | 🥉 | Habit Architect (Bronze Trophy) |
-| 7 | 30 Days | ⚔️ | Unshakable (1 Full Month) |
-| 8 | 45 Days | 🥈 | Focus Master (Silver Trophy) |
-| 9 | 60 Days | 🥇 | Resilience Titan (Gold Trophy) |
-| 10 | 75 Days | ⚜️ | Mind Sculptor |
-| 11 | 90 Days | 🏆 | Quarter Master (Quarter Year) |
-| 12 | 115 Days | 🔱 | Master of Self |
-| 13 | 135 Days | 👑 | Iron Will Sovereign |
-| 14 | 160 Days | 💎 | Diamond Mind |
-| 15 | 180 Days | 🔮 | Half-Year Overlord (6 Months) |
-| 16 | 210 Days | 🌟 | Unstoppable Force |
-| 17 | 240 Days | 💫 | Ascended Paragon |
-| 18 | 270 Days | 🌠 | Apex Disciplinarian (9 Months) |
-| 19 | 300 Days | 🔱 | Grandmaster |
-| 20 | 330 Days | 🚀 | Limitless |
-| 21 | 365 Days | 🌌 | One Year Legend (1 Year Trophy 🏆) |
-| 22 | 500 Days | 🎖️ | Eternal Warrior |
-| 23 | 730 Days | 🪐 | Two Year Conqueror (2 Years) |
-| 24 | 900 Days | ☀️ | Immortal Titan |
-| 25 | 1095+ Days | 🏛️ | THE SUPREME EMPEROR (3+ Years Ultimate Crown 👑) |
-
-- Visual progress bars, lock icons (`🔒`), days-remaining countdowns, and quick catalog filter pills (*All*, *Unlocked*, *Locked*).
-
-### 5. 🎨 Refined Minimalist Palette
-- **Deep Navy Background**: `#0B1120`
-- **Soft Dark-Slate Cards**: `#1E293B` (with subtle `#334155` borders)
-- **Vibrant Royal Blue Accents**: `#2563EB` / `#3B82F6`
-- **High-Contrast Text**: `#F8FAFC` primary with `#94A3B8` secondary slate
-- **Broader Squarish Quick-Add Button**: Modern ergonomic card shape (`56px × 52px, border-radius: 12px`) for rapid discipline logging.
+### 4. 🌐 Multi-Language Support (i18n) & Visual Polish
+- **Instant In-App Language Switching**: Full **Azerbaijani (`az`)** and **English (`en`)** localization backed by Android string resources and `Preferences DataStore`, plus Android 13+ Per-App Language support (`generateLocaleConfig`).
+- **Tactical Dark Minimalism**: Deep Navy canvas (`#0B1120`), Dark Slate cards (`#1E293B`), Royal Blue accents (`#2563EB`), Emerald completions (`#10B981`), and bundled `Outfit` + `Inter` typography.
 
 ---
 
@@ -102,16 +55,13 @@ An unyielding progression hierarchy tracking long-term character building:
 
 - **Operating System / Target**: Android 7.0 (API 24) up to Android 16 (API 36)
 - **Application ID**: `com.sabutaycrafts.disciplineplanner`
-- **Framework & Native Layer**:
-  - **Kotlin** with modern Gradle Kotlin DSL (`.gradle.kts`)
-  - **Jetpack Compose** & `AndroidView` hardware-accelerated WebView engine
-  - Safe insets handling via `enableEdgeToEdge()` and window padding
-- **UI & Web Application Layer**:
-  - Vanilla modern ES6+ JavaScript
-  - **Tailwind CSS** typography and layout engine
-  - Multi-layer procedural SVG rendering pipeline with drop shadows and radial gradient lighting
-  - **Web Audio API** synthesized alarm tones (880Hz A5 sawtooth pulse)
-  - 100% client-side `localStorage` data persistence (offline-first, no account creation required)
+- **Architecture**: Clean MVVM (`Room SQLite` + `Preferences DataStore` -> `Repository` -> `StateFlow ViewModel` -> `Jetpack Compose M3`)
+- **System Integrations**:
+  - `ForegroundService` (`specialUse`) + `UsageStatsManager` + `WindowManager` Focus Shield overlay
+  - `NotificationManager` Do Not Disturb policy control
+  - `AlarmClock.ACTION_SET_ALARM` system Clock alarm integration
+  - `ToneGenerator` & `LocalHapticFeedback` tactile responses
+  - Bundled local Google Fonts (`Outfit` & `Inter`)
 
 ---
 
@@ -119,32 +69,31 @@ An unyielding progression hierarchy tracking long-term character building:
 
 ```
 discipline-planner/
-├── .github/                      # Issue templates and CI workflows
+├── .github/                      # CI & automated release workflows
 ├── app/
 │   ├── src/
 │   │   ├── main/
 │   │   │   ├── AndroidManifest.xml
-│   │   │   ├── assets/
-│   │   │   │   ├── app.html     # Embedded offline-ready responsive application
-│   │   │   │   └── index.html
 │   │   │   ├── java/com/example/
-│   │   │   │   ├── MainActivity.kt # Compose container with full DOM storage support
-│   │   │   │   └── ui/theme/    # Material 3 Color, Theme, and Type definitions
+│   │   │   │   ├── MainActivity.kt        # Compose host with reactive Locale provider
+│   │   │   │   ├── alarm/                 # System Clock alarm integration
+│   │   │   │   ├── data/                  # Room database, DAOs, DataStore & Repository
+│   │   │   │   ├── focus/                 # FocusBlockerService, StateHolder & Permissions
+│   │   │   │   ├── model/                 # 25-tier Milestones & Habit Categories
+│   │   │   │   ├── ui/                    # Screens, Components, ViewModel & M3 Theme
+│   │   │   │   └── util/                  # LocaleHelper & SoundHelper
 │   │   │   └── res/
-│   │   │       ├── drawable/    # Custom 3D Spartan Helmet vector & adaptive assets
-│   │   │       ├── mipmap-*/    # Density-specific launcher icons
-│   │   │       └── values/      # strings.xml, colors.xml, themes.xml
-│   │   └── test/java/com/example/
-│   │       ├── ExampleUnitTest.kt
-│   │       └── ExampleRobolectricTest.kt
-│   └── build.gradle.kts         # Module build configuration (applicationId: com.sabutaycrafts.disciplineplanner)
-├── gradle/
-│   └── libs.versions.toml       # Centralized Version Catalog
-├── build.gradle.kts             # Root Gradle build script
-├── settings.gradle.kts          # Root project settings: "Discipline Planner"
-├── metadata.json                # Project platform identity metadata
-├── LICENSE                      # GNU Affero General Public License v3.0 (AGPLv3)
-└── README.md                    # Project documentation
+│   │   │       ├── font/                  # Bundled Outfit & Inter TTF fonts
+│   │   │       ├── values/                # English strings & colors
+│   │   │       └── values-az/             # Azerbaijani localized strings
+│   │   └── test/java/com/example/         # Unit & Robolectric tests
+│   └── build.gradle.kts                   # Module Gradle config
+├── gradle/libs.versions.toml              # Centralized Version Catalog
+├── build.gradle.kts                       # Root Gradle build script
+├── settings.gradle.kts                    # Project settings: "Discipline Planner"
+├── metadata.json                          # Project platform metadata
+├── LICENSE                                # GNU Affero General Public License v3.0 (AGPLv3)
+└── README.md                              # Project documentation
 ```
 
 ---

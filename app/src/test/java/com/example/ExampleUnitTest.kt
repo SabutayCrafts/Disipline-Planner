@@ -18,7 +18,10 @@
 
 package com.example
 
+import com.example.alarm.AlarmHelper
+import com.example.focus.FocusStateHolder
 import com.example.model.DisciplineRankCatalog
+import com.example.model.HabitCategories
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -38,44 +41,24 @@ class ExampleUnitTest {
 
   @Test
   fun testRankProgression() {
-    // 0 or 1 days streak -> Level 1 (Novice)
     assertEquals(1, DisciplineRankCatalog.getCurrentRank(0).level)
     assertEquals(1, DisciplineRankCatalog.getCurrentRank(1).level)
 
-    // 7 days -> Level 3 (Consistent)
     val rank7 = DisciplineRankCatalog.getCurrentRank(7)
     assertEquals(3, rank7.level)
     assertEquals("🔥", rank7.badgeIcon)
 
-    // 30 days -> Level 7 (Unshakable)
     val rank30 = DisciplineRankCatalog.getCurrentRank(30)
     assertEquals(7, rank30.level)
     assertEquals("⚔️", rank30.badgeIcon)
 
-    // 365 days -> Level 21 (One Year Legend)
     val rank365 = DisciplineRankCatalog.getCurrentRank(365)
     assertEquals(21, rank365.level)
     assertEquals("🌌", rank365.badgeIcon)
 
-    // 1095 days -> Level 25 (Supreme Emperor)
     val rank1095 = DisciplineRankCatalog.getCurrentRank(1095)
     assertEquals(25, rank1095.level)
     assertEquals("🏛️", rank1095.badgeIcon)
-  }
-
-  @Test
-  fun testGearUnlockRequirements() {
-    // Laurel unlocks at 7 days
-    assertFalse(DisciplineRankCatalog.isGearUnlocked("laurel", 6))
-    assertTrue(DisciplineRankCatalog.isGearUnlocked("laurel", 7))
-
-    // Spartan helmet unlocks at 30 days
-    assertFalse(DisciplineRankCatalog.isGearUnlocked("spartan_helmet", 29))
-    assertTrue(DisciplineRankCatalog.isGearUnlocked("spartan_helmet", 30))
-
-    // Gold Crown unlocks at 60 days
-    assertFalse(DisciplineRankCatalog.isGearUnlocked("gold_crown", 59))
-    assertTrue(DisciplineRankCatalog.isGearUnlocked("gold_crown", 60))
   }
 
   @Test
@@ -86,5 +69,35 @@ class ExampleUnitTest {
 
     val nextAfter25 = DisciplineRankCatalog.getNextRank(25)
     assertNull(nextAfter25)
+  }
+
+  @Test
+  fun testAlarmTimeFormattingAndCategories() {
+    assertEquals("07:05", AlarmHelper.formatTime(7, 5))
+    assertEquals("21:30", AlarmHelper.formatTime(21, 30))
+    assertEquals(R.string.cat_health, HabitCategories.getLabelRes("health"))
+    assertEquals(R.string.cat_mind, HabitCategories.getLabelRes("Zehin & Fokus"))
+  }
+
+  @Test
+  fun testFocusStateHolderLifecycle() {
+    FocusStateHolder.resetSession()
+    FocusStateHolder.selectDuration(45)
+    assertEquals(45, FocusStateHolder.state.value.selectedMinutes)
+    assertEquals(45 * 60L, FocusStateHolder.state.value.remainingSeconds)
+
+    FocusStateHolder.startSession(dndActive = true)
+    assertTrue(FocusStateHolder.state.value.isRunning)
+    assertTrue(FocusStateHolder.state.value.dndActive)
+
+    FocusStateHolder.tickSecond()
+    assertEquals(45 * 60L - 1, FocusStateHolder.state.value.remainingSeconds)
+
+    FocusStateHolder.pauseSession()
+    assertTrue(FocusStateHolder.state.value.isPaused)
+
+    FocusStateHolder.resetSession()
+    assertFalse(FocusStateHolder.state.value.isRunning)
+    assertFalse(FocusStateHolder.state.value.dndActive)
   }
 }

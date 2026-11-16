@@ -27,8 +27,11 @@ data class HabitEntity(
   val id: Long = 0,
   val title: String,
   val description: String = "",
-  val category: String = "Sağlamlıq",
+  val category: String = "health",
   val targetDaysPerWeek: Int = 7,
+  val reminderHour: Int? = null,
+  val reminderMinute: Int? = null,
+  val alarmEnabled: Boolean = false,
   val colorHex: String = "#2563EB",
   val createdAt: Long = System.currentTimeMillis(),
   val isArchived: Boolean = false

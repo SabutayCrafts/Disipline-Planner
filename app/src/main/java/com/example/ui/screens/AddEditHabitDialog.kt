@@ -18,7 +18,9 @@
 
 package com.example.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,30 +32,51 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerDefaults
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
+import com.example.alarm.AlarmHelper
 import com.example.data.local.entity.HabitEntity
+import com.example.model.HabitCategories
+import com.example.ui.theme.AccentCrimson
+import com.example.ui.theme.AccentGold
 import com.example.ui.theme.PrimaryBlue
+import com.example.ui.theme.PrimaryBlueLight
 import com.example.ui.theme.SurfaceBorder
 import com.example.ui.theme.SurfaceCard
 import com.example.ui.theme.SurfaceSlate
@@ -61,27 +84,43 @@ import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun AddEditHabitDialog(
   initialHabit: HabitEntity? = null,
   onDismiss: () -> Unit,
-  onSave: (title: String, description: String, category: String, targetDays: Int) -> Unit
+  onSave: (
+    title: String,
+    description: String,
+    category: String,
+    reminderHour: Int?,
+    reminderMinute: Int?,
+    alarmEnabled: Boolean
+  ) -> Unit
 ) {
   var title by remember { mutableStateOf(initialHabit?.title ?: "") }
   var description by remember { mutableStateOf(initialHabit?.description ?: "") }
-  var selectedCategory by remember { mutableStateOf(initialHabit?.category ?: "Sağlamlıq") }
-  var targetDays by remember { mutableIntStateOf(initialHabit?.targetDaysPerWeek ?: 7) }
+  var selectedCategoryKey by remember {
+    mutableStateOf(
+      HabitCategories.ALL.firstOrNull {
+        it.key.equals(initialHabit?.category, ignoreCase = true)
+      }?.key ?: "health"
+    )
+  }
+  var reminderHour by remember { mutableStateOf(initialHabit?.reminderHour) }
+  var reminderMinute by remember { mutableStateOf(initialHabit?.reminderMinute) }
+  var alarmEnabled by remember { mutableStateOf(initialHabit?.alarmEnabled ?: false) }
   var titleError by remember { mutableStateOf(false) }
-
-  val categories = listOf("Sağlamlıq", "Zehin & Fokus", "Məhsuldarlıq", "İntizam", "İdman", "Öyrənmə")
+  var showTimePicker by remember { mutableStateOf(false) }
 
   AlertDialog(
     onDismissRequest = onDismiss,
     containerColor = SurfaceSlate,
     title = {
       Text(
-        text = if (initialHabit == null) "Yeni İntizam Vərdişi" else "Vərdişə Düzəliş Et",
+        text = stringResource(
+          if (initialHabit == null) R.string.dialog_new_habit else R.string.dialog_edit_habit
+        ),
         style = MaterialTheme.typography.titleLarge,
         fontWeight = FontWeight.Bold,
         color = TextPrimary
@@ -89,8 +128,10 @@ fun AddEditHabitDialog(
     },
     text = {
       Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+        modifier = Modifier
+          .fillMaxWidth()
+          .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
       ) {
         OutlinedTextField(
           value = title,
@@ -98,7 +139,7 @@ fun AddEditHabitDialog(
             title = it
             if (it.isNotBlank()) titleError = false
           },
-          label = { Text("Vərdişin Adı (məs: Səhər İdmanı)") },
+          label = { Text(stringResource(R.string.label_habit_title)) },
           isError = titleError,
           singleLine = true,
           modifier = Modifier
@@ -112,13 +153,17 @@ fun AddEditHabitDialog(
           )
         )
         if (titleError) {
-          Text("Vərdiş adı boş ola bilməz", color = Color(0xFFEF4444), fontSize = 12.sp)
+          Text(
+            text = stringResource(R.string.error_habit_title_empty),
+            color = AccentCrimson,
+            fontSize = 12.sp
+          )
         }
 
         OutlinedTextField(
           value = description,
           onValueChange = { description = it },
-          label = { Text("Məqsəd və ya Qeyd (İxtiyari)") },
+          label = { Text(stringResource(R.string.label_habit_desc)) },
           singleLine = true,
           modifier = Modifier
             .fillMaxWidth()
@@ -132,7 +177,7 @@ fun AddEditHabitDialog(
         )
 
         Text(
-          text = "Kateqoriya",
+          text = stringResource(R.string.label_category),
           style = MaterialTheme.typography.labelMedium,
           color = TextSecondary,
           fontWeight = FontWeight.SemiBold
@@ -142,22 +187,104 @@ fun AddEditHabitDialog(
           horizontalArrangement = Arrangement.spacedBy(8.dp),
           verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-          categories.forEach { cat ->
-            val isSelected = cat == selectedCategory
+          HabitCategories.ALL.forEach { cat ->
+            val isSelected = cat.key == selectedCategoryKey
             Box(
               modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
                 .background(if (isSelected) PrimaryBlue else SurfaceCard)
-                .clickable { selectedCategory = cat }
+                .border(
+                  BorderStroke(1.dp, if (isSelected) PrimaryBlueLight else SurfaceBorder),
+                  RoundedCornerShape(8.dp)
+                )
+                .clickable { selectedCategoryKey = cat.key }
                 .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
               Text(
-                text = cat,
+                text = stringResource(cat.labelResId),
                 fontSize = 12.sp,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                 color = if (isSelected) Color.White else TextSecondary
               )
             }
+          }
+        }
+
+        // Daily Alarm Reminder Configuration
+        Column(
+          modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(SurfaceCard)
+            .border(1.dp, SurfaceBorder, RoundedCornerShape(12.dp))
+            .padding(12.dp),
+          verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+              Icon(
+                imageVector = Icons.Default.Alarm,
+                contentDescription = null,
+                tint = AccentGold,
+                modifier = Modifier.size(18.dp)
+              )
+              Spacer(modifier = Modifier.width(8.dp))
+              Text(
+                text = stringResource(R.string.label_reminder_time),
+                style = MaterialTheme.typography.labelMedium,
+                color = TextPrimary,
+                fontWeight = FontWeight.SemiBold
+              )
+            }
+
+            OutlinedButton(
+              onClick = { showTimePicker = true },
+              border = BorderStroke(1.dp, PrimaryBlueLight.copy(alpha = 0.6f)),
+              shape = RoundedCornerShape(8.dp)
+            ) {
+              Text(
+                text = if (reminderHour != null && reminderMinute != null) {
+                  AlarmHelper.formatTime(reminderHour!!, reminderMinute!!)
+                } else {
+                  stringResource(R.string.label_pick_time)
+                },
+                color = PrimaryBlueLight,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold
+              )
+            }
+          }
+
+          if (reminderHour != null && reminderMinute != null) {
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.SpaceBetween,
+              verticalAlignment = Alignment.CenterVertically
+            ) {
+              Text(
+                text = stringResource(R.string.label_enable_alarm),
+                style = MaterialTheme.typography.bodySmall,
+                color = TextSecondary
+              )
+              Switch(
+                checked = alarmEnabled,
+                onCheckedChange = { alarmEnabled = it },
+                colors = SwitchDefaults.colors(
+                  checkedThumbColor = Color.White,
+                  checkedTrackColor = AccentGold
+                )
+              )
+            }
+          } else {
+            Text(
+              text = stringResource(R.string.label_time_not_set),
+              style = MaterialTheme.typography.bodySmall,
+              color = TextMuted
+            )
           }
         }
       }
@@ -168,19 +295,87 @@ fun AddEditHabitDialog(
           if (title.isBlank()) {
             titleError = true
           } else {
-            onSave(title.trim(), description.trim(), selectedCategory, targetDays)
+            onSave(
+              title.trim(),
+              description.trim(),
+              selectedCategoryKey,
+              reminderHour,
+              reminderMinute,
+              alarmEnabled && reminderHour != null
+            )
           }
         },
         colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
         modifier = Modifier.testTag("save_habit_button")
       ) {
-        Text("Yadda Saxla", color = Color.White, fontWeight = FontWeight.Bold)
+        Text(
+          text = stringResource(
+            if (alarmEnabled && reminderHour != null) R.string.label_sync_clock_now else R.string.save
+          ),
+          color = Color.White,
+          fontWeight = FontWeight.Bold
+        )
       }
     },
     dismissButton = {
       TextButton(onClick = onDismiss) {
-        Text("Ləğv Et", color = TextMuted)
+        Text(stringResource(R.string.cancel), color = TextMuted)
       }
     }
   )
+
+  if (showTimePicker) {
+    val pickerState = rememberTimePickerState(
+      initialHour = reminderHour ?: 7,
+      initialMinute = reminderMinute ?: 30,
+      is24Hour = true
+    )
+    AlertDialog(
+      onDismissRequest = { showTimePicker = false },
+      containerColor = SurfaceSlate,
+      title = {
+        Text(
+          text = stringResource(R.string.label_pick_time),
+          color = TextPrimary,
+          fontWeight = FontWeight.Bold
+        )
+      },
+      text = {
+        Box(
+          modifier = Modifier.fillMaxWidth(),
+          contentAlignment = Alignment.Center
+        ) {
+          TimePicker(
+            state = pickerState,
+            colors = TimePickerDefaults.colors(
+              clockDialColor = SurfaceCard,
+              selectorColor = PrimaryBlue,
+              timeSelectorSelectedContainerColor = PrimaryBlue,
+              timeSelectorUnselectedContainerColor = SurfaceCard,
+              timeSelectorSelectedContentColor = Color.White,
+              timeSelectorUnselectedContentColor = TextSecondary
+            )
+          )
+        }
+      },
+      confirmButton = {
+        Button(
+          onClick = {
+            reminderHour = pickerState.hour
+            reminderMinute = pickerState.minute
+            alarmEnabled = true
+            showTimePicker = false
+          },
+          colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
+        ) {
+          Text(stringResource(R.string.done), color = Color.White, fontWeight = FontWeight.Bold)
+        }
+      },
+      dismissButton = {
+        TextButton(onClick = { showTimePicker = false }) {
+          Text(stringResource(R.string.cancel), color = TextMuted)
+        }
+      }
+    )
+  }
 }

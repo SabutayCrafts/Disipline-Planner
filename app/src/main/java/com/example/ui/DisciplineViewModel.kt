@@ -22,46 +22,63 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.local.AppDatabase
+import com.example.data.local.AppSettings
+import com.example.data.local.SettingsDataStore
 import com.example.data.local.entity.FocusSessionEntity
 import com.example.data.local.entity.HabitEntity
-import com.example.data.local.entity.UserProfileEntity
 import com.example.data.repository.DisciplineRepository
+import com.example.focus.FocusBlockerService
+import com.example.focus.FocusPermissionHelper
+import com.example.focus.FocusPermissionsStatus
+import com.example.focus.FocusStateHolder
+import com.example.focus.FocusTimerState
+import com.example.focus.InstalledAppInfo
 import com.example.model.DisciplineRank
 import com.example.model.DisciplineRankCatalog
 import com.example.model.HabitItemUiState
+import com.example.util.LocaleHelper
+import com.example.util.SoundHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class DisciplineViewModel(application: Application) : AndroidViewModel(application) {
   private val database = AppDatabase.getDatabase(application)
+  private val settingsDataStore = SettingsDataStore(application)
   private val repository = DisciplineRepository(
     database.habitDao(),
     database.habitLogDao(),
-    database.focusSessionDao(),
-    database.userProfileDao()
+    database.focusSessionDao()
   )
 
   val todayDateString = repository.getTodayDateString()
 
-  init {
-    viewModelScope.launch {
-      repository.ensureProfileAndStarterData()
-    }
-  }
-
-  // User Profile
-  val userProfile: StateFlow<UserProfileEntity> = repository.getUserProfile()
-    .filterNotNull()
+  // App Settings (Language, Blocked Apps, DND, Audio & Haptics)
+  val appSettings: StateFlow<AppSettings> = settingsDataStore.settingsFlow
     .stateIn(
       scope = viewModelScope,
-      started = SharingStarted.WhileSubscribed(5000),
-      initialValue = UserProfileEntity()
+      started = SharingStarted.Eagerly,
+      initialValue = AppSettings()
     )
+
+  // Focus State synchronized with FocusBlockerService
+  val focusState: StateFlow<FocusTimerState> = FocusStateHolder.state
+
+  // Focus Permissions status
+  private val _permissionsStatus = MutableStateFlow(FocusPermissionHelper.checkPermissions(application))
+  val permissionsStatus: StateFlow<FocusPermissionsStatus> = _permissionsStatus.asStateFlow()
+
+  // Installed apps list for App Blocker picker
+  private val _installedApps = MutableStateFlow<List<InstalledAppInfo>>(emptyList())
+  val installedApps: StateFlow<List<InstalledAppInfo>> = _installedApps.asStateFlow()
+
+  private val _isLoadingApps = MutableStateFlow(false)
+  val isLoadingApps: StateFlow<Boolean> = _isLoadingApps.asStateFlow()
 
   // Distinct completed dates for streak calculation
   val completedDates: StateFlow<List<String>> = repository.getDistinctCompletedDates()
@@ -73,20 +90,16 @@ class DisciplineViewModel(application: Application) : AndroidViewModel(applicati
 
   // Overall active streak
   val activeStreak: StateFlow<Int> = completedDates
-    .combine(MutableStateFlow(Unit)) { dates, _ ->
-      repository.calculateStreak(dates)
-    }
+    .map { dates -> repository.calculateStreak(dates) }
     .stateIn(
       scope = viewModelScope,
       started = SharingStarted.WhileSubscribed(5000),
       initialValue = 0
     )
 
-  // Current Rank and Next Rank in 25-tier catalog
+  // Current Rank and Next Rank in 25-tier Streak Milestones
   val currentRank: StateFlow<DisciplineRank> = activeStreak
-    .combine(MutableStateFlow(Unit)) { streak, _ ->
-      DisciplineRankCatalog.getCurrentRank(streak)
-    }
+    .map { streak -> DisciplineRankCatalog.getCurrentRank(streak) }
     .stateIn(
       scope = viewModelScope,
       started = SharingStarted.WhileSubscribed(5000),
@@ -94,9 +107,7 @@ class DisciplineViewModel(application: Application) : AndroidViewModel(applicati
     )
 
   val nextRank: StateFlow<DisciplineRank?> = currentRank
-    .combine(MutableStateFlow(Unit)) { rank, _ ->
-      DisciplineRankCatalog.getNextRank(rank.level)
-    }
+    .map { rank -> DisciplineRankCatalog.getNextRank(rank.level) }
     .stateIn(
       scope = viewModelScope,
       started = SharingStarted.WhileSubscribed(5000),
@@ -152,20 +163,33 @@ class DisciplineViewModel(application: Application) : AndroidViewModel(applicati
       initialValue = 0
     )
 
-  fun toggleHabit(habitId: Long) {
+  fun toggleHabit(habitId: Long, onResult: (Boolean) -> Unit = {}) {
     viewModelScope.launch {
-      repository.toggleHabitCompletion(habitId, todayDateString)
+      val nowCompleted = repository.toggleHabitCompletion(habitId, todayDateString)
+      if (nowCompleted && appSettings.value.soundEnabled) {
+        SoundHelper.playCompletionChime()
+      }
+      onResult(nowCompleted)
     }
   }
 
-  fun addHabit(title: String, description: String, category: String, targetDays: Int) {
+  fun addHabit(
+    title: String,
+    description: String,
+    category: String,
+    reminderHour: Int?,
+    reminderMinute: Int?,
+    alarmEnabled: Boolean
+  ) {
     viewModelScope.launch {
       repository.insertHabit(
         HabitEntity(
           title = title,
           description = description,
           category = category,
-          targetDaysPerWeek = targetDays
+          reminderHour = reminderHour,
+          reminderMinute = reminderMinute,
+          alarmEnabled = alarmEnabled
         )
       )
     }
@@ -183,15 +207,77 @@ class DisciplineViewModel(application: Application) : AndroidViewModel(applicati
     }
   }
 
-  fun saveFocusSession(durationMinutes: Int) {
-    viewModelScope.launch {
-      repository.insertFocusSession(durationMinutes)
+  // Focus Blocker & Timer Controls
+  fun selectFocusMinutes(minutes: Int) {
+    FocusStateHolder.selectDuration(minutes)
+  }
+
+  fun startOrToggleFocus() {
+    val ctx = getApplication<Application>()
+    val current = focusState.value
+    if (!current.isRunning) {
+      FocusBlockerService.startFocus(ctx)
+    } else if (current.isPaused) {
+      FocusBlockerService.resumeFocus(ctx)
+    } else {
+      FocusBlockerService.pauseFocus(ctx)
     }
   }
 
-  fun saveUserProfile(profile: UserProfileEntity) {
+  fun stopFocusSession() {
+    FocusBlockerService.stopFocus(getApplication())
+  }
+
+  fun acknowledgeFocusCompletion() {
+    FocusStateHolder.acknowledgeCompletion()
+  }
+
+  fun clearInterceptedAppAlert() {
+    FocusStateHolder.markInterceptedApp(null)
+  }
+
+  fun refreshPermissions() {
+    _permissionsStatus.value = FocusPermissionHelper.checkPermissions(getApplication())
+  }
+
+  fun loadInstalledApps() {
+    if (_installedApps.value.isNotEmpty() || _isLoadingApps.value) return
     viewModelScope.launch {
-      repository.saveUserProfile(profile)
+      _isLoadingApps.value = true
+      _installedApps.value = FocusPermissionHelper.getLaunchableApps(getApplication())
+      _isLoadingApps.value = false
+    }
+  }
+
+  fun toggleBlockedApp(packageName: String) {
+    viewModelScope.launch {
+      settingsDataStore.toggleBlockedPackage(packageName)
+    }
+  }
+
+  // Settings & i18n
+  fun setLanguage(code: String) {
+    viewModelScope.launch {
+      settingsDataStore.setLanguageCode(code)
+      LocaleHelper.syncSystemAppLocale(getApplication(), code)
+    }
+  }
+
+  fun setDndEnabled(enabled: Boolean) {
+    viewModelScope.launch {
+      settingsDataStore.setDndEnabled(enabled)
+    }
+  }
+
+  fun setSoundEnabled(enabled: Boolean) {
+    viewModelScope.launch {
+      settingsDataStore.setSoundEnabled(enabled)
+    }
+  }
+
+  fun setHapticsEnabled(enabled: Boolean) {
+    viewModelScope.launch {
+      settingsDataStore.setHapticsEnabled(enabled)
     }
   }
 }

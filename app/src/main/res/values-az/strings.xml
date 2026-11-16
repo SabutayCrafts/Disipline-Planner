@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Discipline Planner</string>
+
+    <!-- Bottom Navigation Tabs -->
+    <string name="nav_today">Bugün</string>
+    <string name="nav_focus">Fokus</string>
+    <string name="nav_statistics">Statistika</string>
+
+    <!-- Header & Common -->
+    <string name="days_count">%1$d gün</string>
+    <string name="days_full">%1$d Gün</string>
+    <string name="day_singular">%1$d Gün</string>
+    <string name="save">Yadda Saxla</string>
+    <string name="cancel">Ləğv Et</string>
+    <string name="close">Bağla</string>
+    <string name="edit">Düzəliş et</string>
+    <string name="delete">Sil</string>
+    <string name="options">Seçimlər</string>
+    <string name="done">Hazır</string>
+    <string name="settings_title">Ayarlar</string>
+    <string name="settings_desc">Dil, səs və diqqət bloklayıcısı</string>
+
+    <!-- Today Screen -->
+    <string name="today_title">Bugünkü İntizam</string>
+    <string name="daily_progress">Günün İrəliləyişi</string>
+    <string name="completed_fraction">%1$d / %2$d tamamlandı</string>
+    <string name="progress_complete_msg">Bütün günlük sözlər tutuldu. Sarsılmaz iradə!</string>
+    <string name="progress_active_msg">Tempi qoruyun və irəli gedin.</string>
+    <string name="progress_start_msg">Bu günün icrasına başlayın.</string>
+    <string name="empty_habits_title">Hələ heç bir vərdiş əlavə edilməyib</string>
+    <string name="empty_habits_subtitle">İlk gündəlik intizam vərdişinizi yaratmaq üçün aşağıdakı + düyməsinə toxunun.</string>
+    <string name="cd_quick_add">Yeni Vərdiş Əlavə Et</string>
+    <string name="cd_completed">Tamamlandı</string>
+    <string name="cd_set_alarm">Saat Tətbiqində Alarm Qur</string>
+    <string name="habit_completed_toast">İntizam tamamlandı!</string>
+    <string name="habit_saved_toast">Vərdiş yadda saxlanıldı!</string>
+    <string name="habit_deleted_toast">Vərdiş silindi</string>
+    <string name="alarm_launched_toast">Alarm qurmaq üçün Saat tətbiqi açılır (%1$02d:%2$02d)</string>
+    <string name="alarm_not_supported_toast">Alarm qurmaq üçün sistem Saat tətbiqi tapılmadı</string>
+
+    <!-- Add / Edit Habit Dialog -->
+    <string name="dialog_new_habit">Yeni İntizam Vərdişi</string>
+    <string name="dialog_edit_habit">Vərdişə Düzəliş Et</string>
+    <string name="label_habit_title">Vərdişin Adı (məs: Səhər İdmanı)</string>
+    <string name="error_habit_title_empty">Vərdiş adı boş ola bilməz</string>
+    <string name="label_habit_desc">Məqsəd və ya Qeyd (İxtiyari)</string>
+    <string name="label_category">Kateqoriya</string>
+    <string name="label_reminder_time">Gündəlik Alarm Xatırladıcısı</string>
+    <string name="label_enable_alarm">Telefon Alarmı Qur</string>
+    <string name="label_pick_time">Saat Seç</string>
+    <string name="label_time_not_set">Xatırlatma saatı seçilməyib</string>
+    <string name="label_sync_clock_now">Saxla və Saat Alarmını Aç</string>
+
+    <!-- Categories -->
+    <string name="cat_health">Sağlamlıq</string>
+    <string name="cat_mind">Zehin &amp; Fokus</string>
+    <string name="cat_productivity">Məhsuldarlıq</string>
+    <string name="cat_discipline">İntizam</string>
+    <string name="cat_fitness">İdman</string>
+    <string name="cat_learning">Öyrənmə</string>
+
+    <!-- Focus Screen & Blocker -->
+    <string name="focus_title">Dərin Fokus Rejimi</string>
+    <string name="focus_subtitle">Yayındırıcıları bloklayın və tam diqqətlə çalışın</string>
+    <string name="minutes_short">%1$d dəq</string>
+    <string name="custom_time">Xüsusi</string>
+    <string name="focus_status_active">FOKUS QALXANI AKTİVDİR</string>
+    <string name="focus_status_paused">DAYANDIRILIB</string>
+    <string name="focus_status_ready">BAŞLAMAĞA HAZIR</string>
+    <string name="cd_start_focus">Fokusa Başla</string>
+    <string name="cd_pause_focus">Dondur</string>
+    <string name="cd_reset_focus">Sıfırla</string>
+    <string name="blocker_panel_title">Yayındırıcı Bloklayıcısı</string>
+    <string name="blocker_apps_selected">%1$d tətbiq bloklanır</string>
+    <string name="blocker_no_apps_selected">Hələ bloklanacaq tətbiq seçilməyib</string>
+    <string name="btn_choose_apps">Tətbiqləri Seç</string>
+    <string name="btn_permissions">İcazələr</string>
+    <string name="dnd_toggle_label">Avtomatik Narahat Etmə (DND)</string>
+    <string name="dnd_toggle_desc">Fokus zamanı bildirişləri susdur</string>
+    <string name="focus_complete_title">Fokus Seansı Tamamlandı!</string>
+    <string name="focus_complete_body">%1$d dəqiqəlik yayındırıcısız dərin fokus seansını uğurla başa vurdunuz. Statistikaya əlavə edildi.</string>
+    <string name="btn_continue">Davam Et</string>
+    <string name="tap_to_change_quote">Dəyişmək üçün toxun</string>
+    <string name="custom_minutes_dialog_title">Xüsusi Fokus Müddəti</string>
+    <string name="custom_minutes_label">Dəqiqə (1 – 180)</string>
+
+    <!-- Focus Shield Overlay & Notification -->
+    <string name="shield_title">Fokus Qalxanı Aktivdir</string>
+    <string name="shield_message">Fokus seansınız davam etdiyi müddətdə %1$s bloklanıb.</string>
+    <string name="shield_remaining">Qalan vaxt: %1$s</string>
+    <string name="shield_return_btn">Fokusa Qayıt</string>
+    <string name="fgs_channel_name">Fokus Qalxanı Xidməti</string>
+    <string name="fgs_channel_desc">Fokus geri sayımını və tətbiq bloklayıcısını aktiv saxlayır</string>
+    <string name="fgs_notif_title">Dərin Fokus Aktivdir • %1$s</string>
+    <string name="fgs_notif_body">%1$d yayındırıcı tətbiq bloklanır və səs-küy susdurulub</string>
+    <string name="fgs_notif_stop">Seansı Bitir</string>
+
+    <!-- Blocker Permissions & App Picker -->
+    <string name="perms_dialog_title">Bloklayıcı İcazələri</string>
+    <string name="perms_dialog_subtitle">Fokus rejiminin bildirişləri susdurması və yayındırıcı tətbiqləri real bloklaması üçün icazələri verin.</string>
+    <string name="perm_dnd_title">Narahat Etmə (DND) İcazəsi</string>
+    <string name="perm_dnd_desc">Fokus zamanı gələn bildirişləri susdurur</string>
+    <string name="perm_usage_title">İstifadə Statistikası (Usage Access)</string>
+    <string name="perm_usage_desc">Bloklanmış tətbiqin açıldığını aşkar edir</string>
+    <string name="perm_overlay_title">Digər Tətbiqlər Üstündə Göstər</string>
+    <string name="perm_overlay_desc">Yayındırıcı tətbiqin üzərində Fokus Qalxanını göstərir</string>
+    <string name="perm_notif_title">Bildirişlər</string>
+    <string name="perm_notif_desc">Status panelində canlı geri sayımı göstərir</string>
+    <string name="perm_granted">Verilib</string>
+    <string name="perm_grant_btn">İcazə Ver</string>
+
+    <string name="app_picker_title">Yayındırıcı Tətbiqləri Blokla</string>
+    <string name="app_picker_search">Quraşdırılmış tətbiqləri axtar…</string>
+    <string name="app_picker_loading">Tətbiqlər skan edilir…</string>
+    <string name="app_picker_empty">Uyğun tətbiq tapılmadı</string>
+
+    <!-- Statistics & 25-Tier Streak Milestones -->
+    <string name="stats_title">İntizam Statistikası</string>
+    <string name="stats_subtitle">Real ardıcıllıq analitikası və zəncir hədəfləri</string>
+    <string name="metric_streak">Aktiv Ardıcıllıq</string>
+    <string name="metric_completions">Ümumi İcra</string>
+    <string name="metric_focus">Dərin Fokus</string>
+    <string name="unit_days">gün</string>
+    <string name="unit_times">dəfə</string>
+    <string name="unit_mins">dəq</string>
+    <string name="last_7_days">Son 7 Günlük Ardıcıllıq</string>
+    <string name="consistency_badge">Daimi Vərdiş</string>
+    <string name="recent_focus_sessions">Son Fokus Seansları</string>
+    <string name="no_focus_sessions">Hələ heç bir fokus seansı qeydə alınmayıb. İlk seansı qeyd etmək üçün Fokus taymerini başladın.</string>
+    <string name="focus_session_item">%1$d Dəqiqəlik Fokus</string>
+    <string name="status_completed">Tamamlandı</string>
+
+    <string name="milestones_section_title">25 Səviyyəli Zəncir Hədəfləri</string>
+    <string name="active_tier_badge">Aktiv Dərəcə</string>
+    <string name="level_label">Səviyyə %1$d</string>
+    <string name="next_tier_label">Növbəti: Səviyyə %1$d (%2$s)</string>
+    <string name="days_remaining">%1$d gün qaldı</string>
+    <string name="tier_unlocked">Açıldı</string>
+    <string name="filter_all">Bütün (%1$d)</string>
+    <string name="filter_unlocked">Açılmış (%1$d)</string>
+    <string name="filter_locked">Qıfıllı (%1$d)</string>
+
+    <!-- 25 Rank Titles -->
+    <string name="rank_1">Yeni Başlayan</string>
+    <string name="rank_2">İlk Qığılcım</string>
+    <string name="rank_3">Ardıcıl (1 Həftə)</string>
+    <string name="rank_4">Qüvvə Yığıcısı</string>
+    <string name="rank_5">Dəmir Bünövrə (2 Həftə)</string>
+    <string name="rank_6">Vərdiş Memarı (Bürünc)</string>
+    <string name="rank_7">Sarsılmaz (1 Ay)</string>
+    <string name="rank_8">Fokus Ustası (Gümüş)</string>
+    <string name="rank_9">Dözümlülük Titanı (Qızıl)</string>
+    <string name="rank_10">Ağıl Heykəltəraşı</string>
+    <string name="rank_11">Rüb Komandiri</string>
+    <string name="rank_12">Nəfsin Ağası</string>
+    <string name="rank_13">Polad İradə Hökmranı</string>
+    <string name="rank_14">Almaz Zəka</string>
+    <string name="rank_15">Yarım-İl Fatehi (6 Ay)</string>
+    <string name="rank_16">Dayandırıla Bilməz</string>
+    <string name="rank_17">Ucalmış Nümunə</string>
+    <string name="rank_18">Zirvə İntizamçısı (9 Ay)</string>
+    <string name="rank_19">Qrossmeyster</string>
+    <string name="rank_20">Sərhədsiz</string>
+    <string name="rank_21">Bir İllik Əfsanə</string>
+    <string name="rank_22">Əbədi Cəngavər</string>
+    <string name="rank_23">İki İllik Fateh</string>
+    <string name="rank_24">Ölməz Titan</string>
+    <string name="rank_25">ALİ İMPERATOR (3+ İl)</string>
+
+    <!-- Settings Modal -->
+    <string name="settings_language">Tətbiq Dili</string>
+    <string name="lang_az">Azərbaycan dili</string>
+    <string name="lang_en">English</string>
+    <string name="settings_feedback">Səs və Toxunuş Geri Bildirimi</string>
+    <string name="settings_sound">Tamamlama Səsi</string>
+    <string name="settings_sound_desc">Vərdiş və fokus bitdikdə səs siqnalı çal</string>
+    <string name="settings_haptics">Vibrasiya (Haptic)</string>
+    <string name="settings_haptics_desc">Əməliyyatlar zamanı incə toxunuş titrəyişi</string>
+    <string name="settings_focus_shield">Fokus və Bloklayıcı Ayarları</string>
+    <string name="settings_version">Versiya v0.1.0 • AGPLv3</string>
+
+    <!-- Stoic Quotes -->
+    <string-array name="stoic_quotes">
+        <item>İntizam — indi istədiyinlə ən çox istədiyin arasında seçim etməkdir.</item>
+        <item>Zəiflik bəhanə axtarır, iradə yol tapır.</item>
+        <item>Qələbənin ilk və ən böyük addımı özünə qalib gəlməkdir.</item>
+        <item>Diqqətini qoru, dünya səs-küylə doludur.</item>
+        <item>Hər fokuslu dəqiqə sarsılmaz zehin inşa edir.</item>
+    </string-array>
+</resources>

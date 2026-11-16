@@ -25,12 +25,19 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ui.DisciplineViewModel
 import com.example.ui.MainScreen
 import com.example.ui.theme.BackgroundNavy
 import com.example.ui.theme.MyApplicationTheme
+import com.example.util.LocaleHelper
 
 class MainActivity : ComponentActivity() {
   private val viewModel: DisciplineViewModel by viewModels()
@@ -39,14 +46,25 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
     setContent {
-      MyApplicationTheme {
-        Surface(
-          modifier = Modifier
-            .fillMaxSize()
-            .testTag("discipline_planner_main_screen"),
-          color = BackgroundNavy
-        ) {
-          MainScreen(viewModel = viewModel)
+      val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
+      val baseContext = LocalContext.current
+      val localizedContext = remember(appSettings.languageCode) {
+        LocaleHelper.createLocalizedContext(baseContext, appSettings.languageCode)
+      }
+
+      CompositionLocalProvider(
+        LocalContext provides localizedContext,
+        LocalConfiguration provides localizedContext.resources.configuration
+      ) {
+        MyApplicationTheme {
+          Surface(
+            modifier = Modifier
+              .fillMaxSize()
+              .testTag("discipline_planner_main_screen"),
+            color = BackgroundNavy
+          ) {
+            MainScreen(viewModel = viewModel)
+          }
         }
       }
     }

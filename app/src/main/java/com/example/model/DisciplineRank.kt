@@ -18,43 +18,43 @@
 
 package com.example.model
 
+import androidx.annotation.StringRes
+import com.example.R
+
 data class DisciplineRank(
   val level: Int,
   val requiredDays: Int,
-  val titleAz: String,
-  val titleEn: String,
-  val badgeIcon: String,
-  val unlockedRewardName: String? = null,
-  val rewardGearId: String? = null
+  @StringRes val titleResId: Int,
+  val badgeIcon: String
 )
 
 object DisciplineRankCatalog {
   val ALL_RANKS = listOf(
-    DisciplineRank(1, 1, "Yeni Başlayan", "Novice", "🌱"),
-    DisciplineRank(2, 3, "İlk Qığılcım", "First Spark", "🌿"),
-    DisciplineRank(3, 7, "Ardıcıl (1 Həftə)", "Consistent", "🔥", "Dəfnə Çələngi (Laurel)", "laurel"),
-    DisciplineRank(4, 10, "Qüvvə Yığıcısı", "Momentum Builder", "⚡"),
-    DisciplineRank(5, 14, "Dəmir Bünövrə (2 Həftə)", "Iron Foundation", "🛡️", "Cəngavər Dəbilqəsi", "knight_helm"),
-    DisciplineRank(6, 21, "Vərdiş Memarı (Bürünc)", "Habit Architect", "🥉"),
-    DisciplineRank(7, 30, "Sarsılmaz (1 Ay)", "Unshakable", "⚔️", "Spartalı Müharibə Dəbilqəsi", "spartan_helmet"),
-    DisciplineRank(8, 45, "Fokus Ustası (Gümüş)", "Focus Master", "🥈"),
-    DisciplineRank(9, 60, "Dözümlülük Titanı (Qızıl)", "Resilience Titan", "🥇", "Hökmdar Qızıl Tacı", "gold_crown"),
-    DisciplineRank(10, 75, "Ağıl Heykəltəraşı", "Mind Sculptor", "⚜️", "Mistik Hələqə (Halo)", "mystic_halo"),
-    DisciplineRank(11, 90, "Rüb Komandiri (1 Rüb)", "Quarter Master", "🏆"),
-    DisciplineRank(12, 115, "Nəfsin Ağası", "Master of Self", "🔱"),
-    DisciplineRank(13, 135, "Polad İradə Hökmranı", "Iron Will Sovereign", "👑"),
-    DisciplineRank(14, 160, "Almaz Zəka", "Diamond Mind", "💎"),
-    DisciplineRank(15, 180, "Yarım-İl Fatehi (6 Ay)", "Half-Year Overlord", "🔮"),
-    DisciplineRank(16, 210, "Dayandırıla Bilməz", "Unstoppable Force", "🌟"),
-    DisciplineRank(17, 240, "Ucalmış Nümunə", "Ascended Paragon", "💫"),
-    DisciplineRank(18, 270, "Zirvə İntizamçısı (9 Ay)", "Apex Disciplinarian", "🌠"),
-    DisciplineRank(19, 300, "Qrossmeyster", "Grandmaster", "🔱"),
-    DisciplineRank(20, 330, "Sərhədsiz", "Limitless", "🚀"),
-    DisciplineRank(21, 365, "Bir İllik Əfsanə (1 İl)", "One Year Legend", "🌌", "Ali İmperator Tacı", "emperor_crown"),
-    DisciplineRank(22, 500, "Əbədi Cəngavər", "Eternal Warrior", "🎖️"),
-    DisciplineRank(23, 730, "İki İllik Fatehi (2 İl)", "Two Year Conqueror", "🪐"),
-    DisciplineRank(24, 900, "Ölməz Titan", "Immortal Titan", "☀️"),
-    DisciplineRank(25, 1095, "ALİ İMPERATOR (3+ İl)", "THE SUPREME EMPEROR", "🏛️")
+    DisciplineRank(1, 1, R.string.rank_1, "🌱"),
+    DisciplineRank(2, 3, R.string.rank_2, "🌿"),
+    DisciplineRank(3, 7, R.string.rank_3, "🔥"),
+    DisciplineRank(4, 10, R.string.rank_4, "⚡"),
+    DisciplineRank(5, 14, R.string.rank_5, "🛡️"),
+    DisciplineRank(6, 21, R.string.rank_6, "🥉"),
+    DisciplineRank(7, 30, R.string.rank_7, "⚔️"),
+    DisciplineRank(8, 45, R.string.rank_8, "🥈"),
+    DisciplineRank(9, 60, R.string.rank_9, "🥇"),
+    DisciplineRank(10, 75, R.string.rank_10, "⚜️"),
+    DisciplineRank(11, 90, R.string.rank_11, "🏆"),
+    DisciplineRank(12, 115, R.string.rank_12, "🔱"),
+    DisciplineRank(13, 135, R.string.rank_13, "👑"),
+    DisciplineRank(14, 160, R.string.rank_14, "💎"),
+    DisciplineRank(15, 180, R.string.rank_15, "🔮"),
+    DisciplineRank(16, 210, R.string.rank_16, "🌟"),
+    DisciplineRank(17, 240, R.string.rank_17, "💫"),
+    DisciplineRank(18, 270, R.string.rank_18, "🌠"),
+    DisciplineRank(19, 300, R.string.rank_19, "🔱"),
+    DisciplineRank(20, 330, R.string.rank_20, "🚀"),
+    DisciplineRank(21, 365, R.string.rank_21, "🌌"),
+    DisciplineRank(22, 500, R.string.rank_22, "🎖️"),
+    DisciplineRank(23, 730, R.string.rank_23, "🪐"),
+    DisciplineRank(24, 900, R.string.rank_24, "☀️"),
+    DisciplineRank(25, 1095, R.string.rank_25, "🏛️")
   )
 
   fun getCurrentRank(streakDays: Int): DisciplineRank {
@@ -63,10 +63,5 @@ object DisciplineRankCatalog {
 
   fun getNextRank(currentLevel: Int): DisciplineRank? {
     return ALL_RANKS.firstOrNull { it.level > currentLevel }
-  }
-
-  fun isGearUnlocked(gearId: String, currentStreak: Int): Boolean {
-    val rankWithGear = ALL_RANKS.firstOrNull { it.rewardGearId == gearId } ?: return true
-    return currentStreak >= rankWithGear.requiredDays
   }
 }

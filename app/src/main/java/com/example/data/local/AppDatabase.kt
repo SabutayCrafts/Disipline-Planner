@@ -25,27 +25,23 @@ import androidx.room.RoomDatabase
 import com.example.data.local.dao.FocusSessionDao
 import com.example.data.local.dao.HabitDao
 import com.example.data.local.dao.HabitLogDao
-import com.example.data.local.dao.UserProfileDao
 import com.example.data.local.entity.FocusSessionEntity
 import com.example.data.local.entity.HabitEntity
 import com.example.data.local.entity.HabitLogEntity
-import com.example.data.local.entity.UserProfileEntity
 
 @Database(
   entities = [
     HabitEntity::class,
     HabitLogEntity::class,
-    FocusSessionEntity::class,
-    UserProfileEntity::class
+    FocusSessionEntity::class
   ],
-  version = 1,
+  version = 2,
   exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
   abstract fun habitDao(): HabitDao
   abstract fun habitLogDao(): HabitLogDao
   abstract fun focusSessionDao(): FocusSessionDao
-  abstract fun userProfileDao(): UserProfileDao
 
   companion object {
     @Volatile
@@ -58,7 +54,7 @@ abstract class AppDatabase : RoomDatabase() {
           AppDatabase::class.java,
           "discipline_planner.db"
         )
-          .fallbackToDestructiveMigration()
+          .fallbackToDestructiveMigration(dropAllTables = true)
           .build()
         INSTANCE = instance
         instance

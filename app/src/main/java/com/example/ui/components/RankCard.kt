@@ -41,10 +41,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.model.DisciplineRank
 import com.example.ui.theme.AccentEmerald
 import com.example.ui.theme.AccentGold
@@ -64,12 +65,13 @@ fun RankCard(
 ) {
   val isUnlocked = userStreak >= rank.requiredDays
   val progress = (userStreak.toFloat() / rank.requiredDays.toFloat()).coerceIn(0f, 1f)
+  val daysLeft = (rank.requiredDays - userStreak).coerceAtLeast(0)
 
   Card(
     modifier = modifier.fillMaxWidth(),
     shape = RoundedCornerShape(16.dp),
     colors = CardDefaults.cardColors(
-      containerColor = if (isUnlocked) SurfaceSlate else SurfaceCard.copy(alpha = 0.7f)
+      containerColor = if (isUnlocked) SurfaceSlate else SurfaceCard.copy(alpha = 0.75f)
     ),
     border = BorderStroke(
       width = 1.dp,
@@ -109,20 +111,20 @@ fun RankCard(
             horizontalArrangement = Arrangement.spacedBy(6.dp)
           ) {
             Text(
-              text = "Səviyyə ${rank.level}",
+              text = stringResource(R.string.level_label, rank.level),
               style = MaterialTheme.typography.labelSmall,
               color = if (isUnlocked) AccentGold else TextMuted,
               fontWeight = FontWeight.Bold
             )
             Text(
-              text = "• ${rank.requiredDays} Gün",
+              text = "• ${stringResource(R.string.days_full, rank.requiredDays)}",
               style = MaterialTheme.typography.labelSmall,
               color = TextSecondary
             )
           }
 
           Text(
-            text = rank.titleAz,
+            text = stringResource(rank.titleResId),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = if (isUnlocked) TextPrimary else TextSecondary
@@ -139,7 +141,8 @@ fun RankCard(
             .padding(horizontal = 10.dp, vertical = 4.dp)
         ) {
           Text(
-            text = if (isUnlocked) "Açıldı" else "${(rank.requiredDays - userStreak).coerceAtLeast(0)} gün qaldı",
+            text = if (isUnlocked) stringResource(R.string.tier_unlocked)
+            else stringResource(R.string.days_remaining, daysLeft),
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
             color = if (isUnlocked) AccentEmerald else TextMuted
@@ -147,7 +150,6 @@ fun RankCard(
         }
       }
 
-      // Progress bar if locked
       if (!isUnlocked) {
         Spacer(modifier = Modifier.height(12.dp))
         LinearProgressIndicator(
@@ -159,26 +161,6 @@ fun RankCard(
           color = PrimaryBlue,
           trackColor = SurfaceBorder
         )
-      }
-
-      // Reward callout if this rank unlocks equipment
-      if (rank.unlockedRewardName != null) {
-        Spacer(modifier = Modifier.height(10.dp))
-        Row(
-          verticalAlignment = Alignment.CenterVertically,
-          modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(PrimaryBlue.copy(alpha = 0.12f))
-            .padding(horizontal = 10.dp, vertical = 6.dp)
-        ) {
-          Text(
-            text = "🎁 Təchizat Mükafatı: ${rank.unlockedRewardName}",
-            style = MaterialTheme.typography.bodySmall,
-            color = PrimaryBlue,
-            fontWeight = FontWeight.Medium
-          )
-        }
       }
     }
   }

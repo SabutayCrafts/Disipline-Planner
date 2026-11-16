@@ -1,3 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Discipline Planner</string>
+
+    <!-- Bottom Navigation Tabs -->
+    <string name="nav_today">Today</string>
+    <string name="nav_focus">Focus</string>
+    <string name="nav_statistics">Statistics</string>
+
+    <!-- Header & Common -->
+    <string name="days_count">%1$d d</string>
+    <string name="days_full">%1$d Days</string>
+    <string name="day_singular">%1$d Day</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="close">Close</string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+    <string name="options">Options</string>
+    <string name="done">Done</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_desc">Language, audio &amp; distraction blocker</string>
+
+    <!-- Today Screen -->
+    <string name="today_title">Today\'s Discipline</string>
+    <string name="daily_progress">Daily Progress</string>
+    <string name="completed_fraction">%1$d / %2$d Completed</string>
+    <string name="progress_complete_msg">All daily promises kept. Unbreakable!</string>
+    <string name="progress_active_msg">Keep the momentum going.</string>
+    <string name="progress_start_msg">Begin execution today.</string>
+    <string name="empty_habits_title">No habits added yet</string>
+    <string name="empty_habits_subtitle">Tap the + button below to forge your first daily discipline.</string>
+    <string name="cd_quick_add">Add New Habit</string>
+    <string name="cd_completed">Completed</string>
+    <string name="cd_set_alarm">Set Alarm in Clock App</string>
+    <string name="habit_completed_toast">Discipline completed!</string>
+    <string name="habit_saved_toast">Discipline saved!</string>
+    <string name="habit_deleted_toast">Discipline removed</string>
+    <string name="alarm_launched_toast">Opening Clock app to set alarm (%1$02d:%2$02d)</string>
+    <string name="alarm_not_supported_toast">No Clock app found to schedule alarm</string>
+
+    <!-- Add / Edit Habit Dialog -->
+    <string name="dialog_new_habit">New Discipline</string>
+    <string name="dialog_edit_habit">Edit Discipline</string>
+    <string name="label_habit_title">Habit Title (e.g. Morning Workout)</string>
+    <string name="error_habit_title_empty">Habit title cannot be empty</string>
+    <string name="label_habit_desc">Note or Goal (Optional)</string>
+    <string name="label_category">Category</string>
+    <string name="label_reminder_time">Daily Alarm Reminder</string>
+    <string name="label_enable_alarm">Schedule Phone Alarm</string>
+    <string name="label_pick_time">Pick Time</string>
+    <string name="label_time_not_set">No reminder time</string>
+    <string name="label_sync_clock_now">Save &amp; Open Clock Alarm</string>
+
+    <!-- Categories -->
+    <string name="cat_health">Health</string>
+    <string name="cat_mind">Mind &amp; Focus</string>
+    <string name="cat_productivity">Productivity</string>
+    <string name="cat_discipline">Discipline</string>
+    <string name="cat_fitness">Fitness</string>
+    <string name="cat_learning">Learning</string>
+
+    <!-- Focus Screen & Blocker -->
+    <string name="focus_title">Deep Focus Mode</string>
+    <string name="focus_subtitle">Silence distractions and lock into deep execution</string>
+    <string name="minutes_short">%1$d min</string>
+    <string name="custom_time">Custom</string>
+    <string name="focus_status_active">FOCUS SHIELD ACTIVE</string>
+    <string name="focus_status_paused">PAUSED</string>
+    <string name="focus_status_ready">READY TO LOCK IN</string>
+    <string name="cd_start_focus">Start Focus</string>
+    <string name="cd_pause_focus">Pause Focus</string>
+    <string name="cd_reset_focus">Reset Timer</string>
+    <string name="blocker_panel_title">Distraction Blocker</string>
+    <string name="blocker_apps_selected">%1$d apps blocked</string>
+    <string name="blocker_no_apps_selected">No apps selected yet</string>
+    <string name="btn_choose_apps">Select Apps</string>
+    <string name="btn_permissions">Permissions</string>
+    <string name="dnd_toggle_label">Auto Do Not Disturb</string>
+    <string name="dnd_toggle_desc">Silence notifications during focus</string>
+    <string name="focus_complete_title">Focus Session Complete!</string>
+    <string name="focus_complete_body">You completed %1$d minutes of distraction-free deep focus. Added to your Statistics.</string>
+    <string name="btn_continue">Continue</string>
+    <string name="tap_to_change_quote">Tap for next quote</string>
+    <string name="custom_minutes_dialog_title">Custom Focus Duration</string>
+    <string name="custom_minutes_label">Minutes (1 – 180)</string>
+
+    <!-- Focus Shield Overlay & Notification -->
+    <string name="shield_title">Focus Shield Active</string>
+    <string name="shield_message">%1$s is blocked while your Focus session is running.</string>
+    <string name="shield_remaining">Remaining: %1$s</string>
+    <string name="shield_return_btn">Return to Focus</string>
+    <string name="fgs_channel_name">Focus Shield Service</string>
+    <string name="fgs_channel_desc">Keeps focus countdown and distraction blocker active</string>
+    <string name="fgs_notif_title">Deep Focus Active • %1$s</string>
+    <string name="fgs_notif_body">Blocking %1$d distracting apps and silencing noise</string>
+    <string name="fgs_notif_stop">End Session</string>
+
+    <!-- Blocker Permissions & App Picker -->
+    <string name="perms_dialog_title">Blocker Permissions</string>
+    <string name="perms_dialog_subtitle">Grant permissions so Focus Mode can genuinely silence notifications and block distracting apps.</string>
+    <string name="perm_dnd_title">Do Not Disturb Access</string>
+    <string name="perm_dnd_desc">Silences incoming alerts during Focus</string>
+    <string name="perm_usage_title">Usage Access</string>
+    <string name="perm_usage_desc">Detects when a blocked app is opened</string>
+    <string name="perm_overlay_title">Display Over Other Apps</string>
+    <string name="perm_overlay_desc">Shows the Focus Shield over distracting apps</string>
+    <string name="perm_notif_title">Notifications</string>
+    <string name="perm_notif_desc">Displays live Focus countdown in status bar</string>
+    <string name="perm_granted">Granted</string>
+    <string name="perm_grant_btn">Grant</string>
+
+    <string name="app_picker_title">Block Distracting Apps</string>
+    <string name="app_picker_search">Search installed apps…</string>
+    <string name="app_picker_loading">Scanning installed apps…</string>
+    <string name="app_picker_empty">No matching apps found</string>
+
+    <!-- Statistics & 25-Tier Streak Milestones -->
+    <string name="stats_title">Discipline Statistics</string>
+    <string name="stats_subtitle">Real consistency analytics &amp; streak milestones</string>
+    <string name="metric_streak">Active Streak</string>
+    <string name="metric_completions">Total Done</string>
+    <string name="metric_focus">Deep Focus</string>
+    <string name="unit_days">d</string>
+    <string name="unit_times">x</string>
+    <string name="unit_mins">m</string>
+    <string name="last_7_days">Last 7 Days Consistency</string>
+    <string name="consistency_badge">Daily Habit</string>
+    <string name="recent_focus_sessions">Recent Focus Sessions</string>
+    <string name="no_focus_sessions">No focus sessions recorded yet. Start a Deep Focus timer to log your first session.</string>
+    <string name="focus_session_item">%1$d Min Focus Session</string>
+    <string name="status_completed">Completed</string>
+
+    <string name="milestones_section_title">25-Tier Streak Milestones</string>
+    <string name="active_tier_badge">Current Tier</string>
+    <string name="level_label">Level %1$d</string>
+    <string name="next_tier_label">Next: Level %1$d (%2$s)</string>
+    <string name="days_remaining">%1$d days left</string>
+    <string name="tier_unlocked">Unlocked</string>
+    <string name="filter_all">All (%1$d)</string>
+    <string name="filter_unlocked">Unlocked (%1$d)</string>
+    <string name="filter_locked">Locked (%1$d)</string>
+
+    <!-- 25 Rank Titles -->
+    <string name="rank_1">Novice</string>
+    <string name="rank_2">First Spark</string>
+    <string name="rank_3">Consistent (1 Week)</string>
+    <string name="rank_4">Momentum Builder</string>
+    <string name="rank_5">Iron Foundation (2 Weeks)</string>
+    <string name="rank_6">Habit Architect (Bronze)</string>
+    <string name="rank_7">Unshakable (1 Month)</string>
+    <string name="rank_8">Focus Master (Silver)</string>
+    <string name="rank_9">Resilience Titan (Gold)</string>
+    <string name="rank_10">Mind Sculptor</string>
+    <string name="rank_11">Quarter Master</string>
+    <string name="rank_12">Master of Self</string>
+    <string name="rank_13">Iron Will Sovereign</string>
+    <string name="rank_14">Diamond Mind</string>
+    <string name="rank_15">Half-Year Overlord (6 Months)</string>
+    <string name="rank_16">Unstoppable Force</string>
+    <string name="rank_17">Ascended Paragon</string>
+    <string name="rank_18">Apex Disciplinarian (9 Months)</string>
+    <string name="rank_19">Grandmaster</string>
+    <string name="rank_20">Limitless</string>
+    <string name="rank_21">One Year Legend</string>
+    <string name="rank_22">Eternal Warrior</string>
+    <string name="rank_23">Two Year Conqueror</string>
+    <string name="rank_24">Immortal Titan</string>
+    <string name="rank_25">THE SUPREME EMPEROR (3+ Years)</string>
+
+    <!-- Settings Modal -->
+    <string name="settings_language">Language</string>
+    <string name="lang_az">Azərbaycan dili</string>
+    <string name="lang_en">English</string>
+    <string name="settings_feedback">Tactile &amp; Audio Feedback</string>
+    <string name="settings_sound">Completion Chime</string>
+    <string name="settings_sound_desc">Play audio chime on habit &amp; focus finish</string>
+    <string name="settings_haptics">Haptic Feedback</string>
+    <string name="settings_haptics_desc">Subtle vibration on actions</string>
+    <string name="settings_focus_shield">Focus &amp; Blocker Setup</string>
+    <string name="settings_version">Version v0.1.0 • AGPLv3</string>
+
+    <!-- Stoic Quotes -->
+    <string-array name="stoic_quotes">
+        <item>Discipline is choosing between what you want now, and what you want most.</item>
+        <item>Weakness looks for excuses; willpower finds a way.</item>
+        <item>The first and greatest victory is to conquer yourself.</item>
+        <item>Protect your attention — the world is full of noise.</item>
+        <item>Every focused minute builds an unbreakable mind.</item>
+    </string-array>
 </resources>

@@ -18,6 +18,13 @@
 
 package com.example.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,17 +37,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FitnessCenter
-import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,19 +57,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
+import com.example.alarm.AlarmHelper
 import com.example.data.local.entity.HabitEntity
 import com.example.model.HabitItemUiState
 import com.example.ui.components.DisciplineCard
 import com.example.ui.components.QuickAddButton
 import com.example.ui.theme.AccentEmerald
-import com.example.ui.theme.AccentGold
 import com.example.ui.theme.BackgroundNavy
 import com.example.ui.theme.PrimaryBlue
+import com.example.ui.theme.PrimaryBlueLight
 import com.example.ui.theme.SurfaceBorder
 import com.example.ui.theme.SurfaceCard
 import com.example.ui.theme.SurfaceSlate
@@ -77,23 +91,56 @@ import java.util.Locale
 @Composable
 fun TodayScreen(
   habits: List<HabitItemUiState>,
-  activeStreak: Int,
+  languageCode: String,
+  hapticsEnabled: Boolean,
   onToggleHabit: (Long) -> Unit,
-  onAddHabit: (title: String, desc: String, category: String, targetDays: Int) -> Unit,
+  onAddHabit: (
+    title: String,
+    desc: String,
+    category: String,
+    reminderHour: Int?,
+    reminderMinute: Int?,
+    alarmEnabled: Boolean
+  ) -> Unit,
   onUpdateHabit: (HabitEntity) -> Unit,
   onDeleteHabit: (Long) -> Unit,
+  onShowMessage: (String) -> Unit,
   modifier: Modifier = Modifier
 ) {
+  val context = LocalContext.current
+  val haptics = LocalHapticFeedback.current
   var showAddDialog by remember { mutableStateOf(false) }
   var habitToEdit by remember { mutableStateOf<HabitEntity?>(null) }
 
   val completedCount = habits.count { it.isCompletedToday }
   val totalCount = habits.size
-  val progressPercent = if (totalCount > 0) (completedCount.toFloat() / totalCount.toFloat()) else 0f
+  val rawProgress = if (totalCount > 0) (completedCount.toFloat() / totalCount.toFloat()) else 0f
+  val animatedProgress by animateFloatAsState(
+    targetValue = rawProgress,
+    animationSpec = spring(dampingRatio = 0.75f, stiffness = 240f),
+    label = "daily_progress_anim"
+  )
+  val progressPercent = (rawProgress * 100).toInt()
+  val isAllCompleted = totalCount > 0 && completedCount == totalCount
 
-  val todayFormatted = remember {
-    SimpleDateFormat("EEEE, d MMMM", Locale("az")).format(Date())
-      .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale("az")) else it.toString() }
+  val todayFormatted = remember(languageCode) {
+    val locale = Locale.forLanguageTag(languageCode)
+    SimpleDateFormat("EEEE, d MMMM", locale).format(Date())
+      .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
+  }
+
+  val msgCompleted = stringResource(R.string.habit_completed_toast)
+  val msgSaved = stringResource(R.string.habit_saved_toast)
+  val msgDeleted = stringResource(R.string.habit_deleted_toast)
+  val msgAlarmMissing = stringResource(R.string.alarm_not_supported_toast)
+
+  fun triggerClockAlarm(habitTitle: String, hour: Int, minute: Int) {
+    val launched = AlarmHelper.scheduleSystemAlarm(context, habitTitle, hour, minute)
+    if (launched) {
+      onShowMessage(context.getString(R.string.alarm_launched_toast, hour, minute))
+    } else {
+      onShowMessage(msgAlarmMissing)
+    }
   }
 
   Box(
@@ -107,108 +154,111 @@ fun TodayScreen(
         .fillMaxSize()
         .padding(horizontal = 16.dp)
     ) {
-      Spacer(modifier = Modifier.height(16.dp))
+      Spacer(modifier = Modifier.height(12.dp))
 
-      // Header Row with Date and Streak Flame Badge
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-      ) {
-        Column {
-          Text(
-            text = "Bugünkü İntizam",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = TextPrimary
-          )
-          Text(
-            text = todayFormatted,
-            style = MaterialTheme.typography.bodyMedium,
-            color = TextSecondary
-          )
-        }
-
-        // Active Streak Pill
-        Box(
-          modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(AccentGold.copy(alpha = 0.18f))
-            .padding(horizontal = 12.dp, vertical = 6.dp),
-          contentAlignment = Alignment.Center
-        ) {
-          Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-              imageVector = Icons.Default.LocalFireDepartment,
-              contentDescription = null,
-              tint = AccentGold,
-              modifier = Modifier.size(18.dp)
-            )
-            Text(
-              text = " $activeStreak gün",
-              color = AccentGold,
-              fontWeight = FontWeight.Bold,
-              fontSize = 13.sp
-            )
-          }
-        }
+      // Header Subtitle
+      Column {
+        Text(
+          text = stringResource(R.string.today_title),
+          style = MaterialTheme.typography.headlineMedium,
+          fontWeight = FontWeight.Bold,
+          color = TextPrimary
+        )
+        Text(
+          text = todayFormatted,
+          style = MaterialTheme.typography.bodyMedium,
+          color = TextSecondary
+        )
       }
 
-      Spacer(modifier = Modifier.height(16.dp))
+      Spacer(modifier = Modifier.height(14.dp))
 
-      // Today Progress Card
+      // Daily Progress Card with Animated Circular Ring
       Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = SurfaceSlate),
-        border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
+        border = BorderStroke(
+          1.dp,
+          if (isAllCompleted) AccentEmerald.copy(alpha = 0.6f) else SurfaceBorder
+        )
       ) {
-        Column(
+        Row(
           modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(16.dp),
+          verticalAlignment = Alignment.CenterVertically
         ) {
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+          // Circular Ring
+          Box(
+            modifier = Modifier.size(64.dp),
+            contentAlignment = Alignment.Center
           ) {
+            Canvas(modifier = Modifier.size(64.dp)) {
+              val stroke = 6.dp.toPx()
+              drawCircle(
+                color = SurfaceCard,
+                style = Stroke(stroke)
+              )
+              drawArc(
+                color = if (isAllCompleted) AccentEmerald else PrimaryBlueLight,
+                startAngle = -90f,
+                sweepAngle = 360f * animatedProgress,
+                useCenter = false,
+                style = Stroke(stroke, cap = StrokeCap.Round)
+              )
+            }
             Text(
-              text = "Günün İrəliləyişi",
-              style = MaterialTheme.typography.titleMedium,
-              fontWeight = FontWeight.SemiBold,
-              color = TextPrimary
-            )
-            Text(
-              text = "$completedCount / $totalCount tamamlandı",
-              style = MaterialTheme.typography.bodyMedium,
+              text = "$progressPercent%",
+              style = MaterialTheme.typography.labelMedium,
               fontWeight = FontWeight.Bold,
-              color = if (totalCount > 0 && completedCount == totalCount) AccentEmerald else PrimaryBlue
+              color = if (isAllCompleted) AccentEmerald else TextPrimary
             )
           }
 
-          Spacer(modifier = Modifier.height(10.dp))
+          Spacer(modifier = Modifier.width(16.dp))
 
-          LinearProgressIndicator(
-            progress = { progressPercent },
-            modifier = Modifier
-              .fillMaxWidth()
-              .height(8.dp)
-              .clip(RoundedCornerShape(4.dp)),
-            color = if (totalCount > 0 && completedCount == totalCount) AccentEmerald else PrimaryBlue,
-            trackColor = SurfaceCard
-          )
+          Column(modifier = Modifier.weight(1f)) {
+            Text(
+              text = stringResource(R.string.daily_progress),
+              style = MaterialTheme.typography.titleMedium,
+              fontWeight = FontWeight.Bold,
+              color = TextPrimary
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+              text = stringResource(R.string.completed_fraction, completedCount, totalCount),
+              style = MaterialTheme.typography.bodyMedium,
+              fontWeight = FontWeight.SemiBold,
+              color = if (isAllCompleted) AccentEmerald else PrimaryBlueLight
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+              text = stringResource(
+                when {
+                  isAllCompleted -> R.string.progress_complete_msg
+                  completedCount > 0 -> R.string.progress_active_msg
+                  else -> R.string.progress_start_msg
+                }
+              ),
+              style = MaterialTheme.typography.bodySmall,
+              color = TextMuted
+            )
+          }
         }
       }
 
-      Spacer(modifier = Modifier.height(16.dp))
+      Spacer(modifier = Modifier.height(14.dp))
 
       // Habits List or Empty State
-      if (habits.isEmpty()) {
+      AnimatedVisibility(
+        visible = habits.isEmpty(),
+        enter = fadeIn(),
+        exit = fadeOut(),
+        modifier = Modifier.weight(1f)
+      ) {
         Box(
-          modifier = Modifier
-            .weight(1f)
-            .fillMaxWidth(),
+          modifier = Modifier.fillMaxSize(),
           contentAlignment = Alignment.Center
         ) {
           Column(
@@ -217,7 +267,7 @@ fun TodayScreen(
           ) {
             Box(
               modifier = Modifier
-                .size(70.dp)
+                .size(72.dp)
                 .clip(CircleShape)
                 .background(SurfaceSlate),
               contentAlignment = Alignment.Center
@@ -225,73 +275,113 @@ fun TodayScreen(
               Icon(
                 imageVector = Icons.Default.FitnessCenter,
                 contentDescription = null,
-                tint = PrimaryBlue,
+                tint = PrimaryBlueLight,
                 modifier = Modifier.size(36.dp)
               )
             }
             Text(
-              text = "Hələ ki heç bir vərdiş əlavə edilməyib",
+              text = stringResource(R.string.empty_habits_title),
               style = MaterialTheme.typography.titleMedium,
               fontWeight = FontWeight.Bold,
               color = TextPrimary
             )
             Text(
-              text = "Aşağıdakı '+' düyməsinə klikləyərək ilk gündəlik intizam vərdişinizi yaradın.",
+              text = stringResource(R.string.empty_habits_subtitle),
               style = MaterialTheme.typography.bodySmall,
               color = TextMuted,
-              modifier = Modifier.padding(horizontal = 24.dp),
-              textAlign = androidx.compose.ui.text.style.TextAlign.Center
+              modifier = Modifier.padding(horizontal = 28.dp),
+              textAlign = TextAlign.Center
             )
           }
         }
-      } else {
+      }
+
+      if (habits.isNotEmpty()) {
         LazyColumn(
           modifier = Modifier.weight(1f),
           verticalArrangement = Arrangement.spacedBy(10.dp),
-          contentPadding = PaddingValues(bottom = 80.dp)
+          contentPadding = PaddingValues(bottom = 86.dp)
         ) {
           items(habits, key = { it.habit.id }) { item ->
             DisciplineCard(
               item = item,
-              onToggleComplete = { onToggleHabit(item.habit.id) },
+              onToggleComplete = {
+                if (hapticsEnabled) {
+                  haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                }
+                if (!item.isCompletedToday) {
+                  onShowMessage(msgCompleted)
+                }
+                onToggleHabit(item.habit.id)
+              },
+              onSetAlarm = {
+                val hour = item.habit.reminderHour ?: 7
+                val minute = item.habit.reminderMinute ?: 30
+                triggerClockAlarm(item.habit.title, hour, minute)
+              },
               onEdit = { habitToEdit = item.habit },
-              onDelete = { onDeleteHabit(item.habit.id) }
+              onDelete = {
+                onDeleteHabit(item.habit.id)
+                onShowMessage(msgDeleted)
+              }
             )
           }
         }
       }
     }
 
-    // Broader Quick-Add Button (Card-shaped: 56dp x 52dp, rounded 12dp) at the bottom-end
+    // Broader Quick-Add Button (56dp x 52dp, 12dp corner radius)
     Box(
       modifier = Modifier
         .align(Alignment.BottomEnd)
         .padding(end = 20.dp, bottom = 20.dp)
     ) {
       QuickAddButton(
-        onClick = { showAddDialog = true }
-      )
-    }
-
-    // Add Habit Dialog
-    if (showAddDialog) {
-      AddEditHabitDialog(
-        onDismiss = { showAddDialog = false },
-        onSave = { title, desc, cat, targetDays ->
-          onAddHabit(title, desc, cat, targetDays)
-          showAddDialog = false
+        onClick = {
+          if (hapticsEnabled) {
+            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+          }
+          showAddDialog = true
         }
       )
     }
 
-    // Edit Habit Dialog
+    if (showAddDialog) {
+      AddEditHabitDialog(
+        onDismiss = { showAddDialog = false },
+        onSave = { title, desc, cat, hour, minute, alarmEnabled ->
+          onAddHabit(title, desc, cat, hour, minute, alarmEnabled)
+          showAddDialog = false
+          if (alarmEnabled && hour != null && minute != null) {
+            triggerClockAlarm(title, hour, minute)
+          } else {
+            onShowMessage(msgSaved)
+          }
+        }
+      )
+    }
+
     habitToEdit?.let { habit ->
       AddEditHabitDialog(
         initialHabit = habit,
         onDismiss = { habitToEdit = null },
-        onSave = { title, desc, cat, targetDays ->
-          onUpdateHabit(habit.copy(title = title, description = desc, category = cat, targetDaysPerWeek = targetDays))
+        onSave = { title, desc, cat, hour, minute, alarmEnabled ->
+          onUpdateHabit(
+            habit.copy(
+              title = title,
+              description = desc,
+              category = cat,
+              reminderHour = hour,
+              reminderMinute = minute,
+              alarmEnabled = alarmEnabled
+            )
+          )
           habitToEdit = null
+          if (alarmEnabled && hour != null && minute != null) {
+            triggerClockAlarm(title, hour, minute)
+          } else {
+            onShowMessage(msgSaved)
+          }
         }
       )
     }

@@ -21,11 +21,9 @@ package com.example.data.repository
 import com.example.data.local.dao.FocusSessionDao
 import com.example.data.local.dao.HabitDao
 import com.example.data.local.dao.HabitLogDao
-import com.example.data.local.dao.UserProfileDao
 import com.example.data.local.entity.FocusSessionEntity
 import com.example.data.local.entity.HabitEntity
 import com.example.data.local.entity.HabitLogEntity
-import com.example.data.local.entity.UserProfileEntity
 import kotlinx.coroutines.flow.Flow
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -35,8 +33,7 @@ import java.util.Locale
 class DisciplineRepository(
   private val habitDao: HabitDao,
   private val habitLogDao: HabitLogDao,
-  private val focusSessionDao: FocusSessionDao,
-  private val userProfileDao: UserProfileDao
+  private val focusSessionDao: FocusSessionDao
 ) {
   private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
 
@@ -53,8 +50,6 @@ class DisciplineRepository(
   fun getDistinctCompletedDates(): Flow<List<String>> = habitLogDao.getDistinctCompletedDates()
 
   fun getTotalCompletionsCount(): Flow<Int> = habitLogDao.getTotalCompletionsCount()
-
-  fun getUserProfile(): Flow<UserProfileEntity?> = userProfileDao.getUserProfile()
 
   fun getAllFocusSessions(): Flow<List<FocusSessionEntity>> = focusSessionDao.getAllFocusSessions()
 
@@ -84,37 +79,13 @@ class DisciplineRepository(
     habitDao.deleteHabitById(habitId)
   }
 
-  suspend fun insertFocusSession(durationMinutes: Int, sessionType: String = "Fokus"): Long {
+  suspend fun insertFocusSession(durationMinutes: Int, sessionType: String = "Focus"): Long {
     val session = FocusSessionEntity(
       durationMinutes = durationMinutes,
       sessionType = sessionType,
       dateString = getTodayDateString()
     )
     return focusSessionDao.insertSession(session)
-  }
-
-  suspend fun saveUserProfile(profile: UserProfileEntity) {
-    userProfileDao.insertOrUpdateProfile(profile)
-  }
-
-  suspend fun ensureProfileAndStarterData() {
-    val profile = userProfileDao.getUserProfileOnce()
-    if (profile == null) {
-      userProfileDao.insertOrUpdateProfile(
-        UserProfileEntity(
-          name = "İntizam Döyüşçüsü",
-          purpose = "Hər gün daha güclü, fokuslu və sarsılmaz olmaq",
-          statusTag = "⚡ Dərin Fokus",
-          hairStyle = "quiff",
-          facialHair = "clean",
-          eyewear = "none",
-          outfit = "armor",
-          skinToneHex = "#F5D0A9",
-          auraTheme = "royal_navy",
-          equippedHeadwear = "none"
-        )
-      )
-    }
   }
 
   /**
@@ -133,7 +104,6 @@ class DisciplineRepository(
     var streak = 0
     val targetCal = Calendar.getInstance()
 
-    // If today is in list, start counting from today. Else if yesterday is, start from yesterday.
     var currentCheckDate: String
     if (sortedDates.contains(today)) {
       currentCheckDate = today

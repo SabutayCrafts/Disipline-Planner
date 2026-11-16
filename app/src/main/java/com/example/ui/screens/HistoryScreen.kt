@@ -21,6 +21,7 @@ package com.example.ui.screens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -40,24 +42,33 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.LocalFireDepartment
-import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.local.entity.FocusSessionEntity
+import com.example.model.DisciplineRank
+import com.example.model.DisciplineRankCatalog
+import com.example.ui.components.RankCard
 import com.example.ui.theme.AccentEmerald
 import com.example.ui.theme.AccentGold
 import com.example.ui.theme.BackgroundNavy
@@ -71,7 +82,6 @@ import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 
 @Composable
@@ -81,13 +91,17 @@ fun HistoryScreen(
   totalFocusMinutes: Int,
   completedDates: List<String>,
   focusSessions: List<FocusSessionEntity>,
+  currentRank: DisciplineRank,
+  nextRank: DisciplineRank?,
+  languageCode: String,
   modifier: Modifier = Modifier
 ) {
-  val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.US) }
-  val dayDisplayFormat = remember { SimpleDateFormat("EEE", Locale("az")) }
+  var rankFilterIndex by remember { mutableIntStateOf(0) } // 0: All, 1: Unlocked, 2: Locked
 
-  // Compute last 7 days statuses
-  val last7Days = remember(completedDates) {
+  val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.US) }
+
+  val last7Days = remember(completedDates, languageCode) {
+    val dayDisplayFormat = SimpleDateFormat("EEE", Locale.forLanguageTag(languageCode))
     val list = mutableListOf<Pair<String, Boolean>>()
     val cal = Calendar.getInstance()
     for (i in 0..6) {
@@ -100,6 +114,22 @@ fun HistoryScreen(
     list.reversed()
   }
 
+  val filteredRanks = remember(rankFilterIndex, activeStreak) {
+    when (rankFilterIndex) {
+      1 -> DisciplineRankCatalog.ALL_RANKS.filter { activeStreak >= it.requiredDays }
+      2 -> DisciplineRankCatalog.ALL_RANKS.filter { activeStreak < it.requiredDays }
+      else -> DisciplineRankCatalog.ALL_RANKS
+    }
+  }
+
+  val nextRankProgress = remember(activeStreak, currentRank, nextRank) {
+    if (nextRank != null) {
+      val span = (nextRank.requiredDays - currentRank.requiredDays).coerceAtLeast(1)
+      val currentInSpan = (activeStreak - currentRank.requiredDays).coerceAtLeast(0)
+      (currentInSpan.toFloat() / span.toFloat()).coerceIn(0f, 1f)
+    } else 1f
+  }
+
   Box(
     modifier = modifier
       .fillMaxSize()
@@ -110,21 +140,24 @@ fun HistoryScreen(
       modifier = Modifier
         .fillMaxSize()
         .padding(horizontal = 16.dp),
-      contentPadding = PaddingValues(top = 16.dp, bottom = 40.dp),
+      contentPadding = PaddingValues(top = 14.dp, bottom = 40.dp),
       verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+      // Header
       item {
-        Text(
-          text = "İntizam Statistikası",
-          style = MaterialTheme.typography.headlineMedium,
-          fontWeight = FontWeight.Bold,
-          color = TextPrimary
-        )
-        Text(
-          text = "Gündəlik səy və daimi ardıcıllığınızın analitikası",
-          style = MaterialTheme.typography.bodyMedium,
-          color = TextSecondary
-        )
+        Column {
+          Text(
+            text = stringResource(R.string.stats_title),
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = TextPrimary
+          )
+          Text(
+            text = stringResource(R.string.stats_subtitle),
+            style = MaterialTheme.typography.bodyMedium,
+            color = TextSecondary
+          )
+        }
       }
 
       // 3 KPI Metric Cards
@@ -134,22 +167,22 @@ fun HistoryScreen(
           horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
           MetricCard(
-            title = "Aktiv Ardıcıllıq",
-            value = "$activeStreak Gün",
+            title = stringResource(R.string.metric_streak),
+            value = "$activeStreak ${stringResource(R.string.unit_days)}",
             icon = Icons.Default.LocalFireDepartment,
             accentColor = AccentGold,
             modifier = Modifier.weight(1f)
           )
           MetricCard(
-            title = "Ümumi İcra",
-            value = "$totalCompletions Dəfə",
+            title = stringResource(R.string.metric_completions),
+            value = "$totalCompletions ${stringResource(R.string.unit_times)}",
             icon = Icons.Default.CheckCircle,
             accentColor = AccentEmerald,
             modifier = Modifier.weight(1f)
           )
           MetricCard(
-            title = "Dərin Fokus",
-            value = "$totalFocusMinutes Dəq",
+            title = stringResource(R.string.metric_focus),
+            value = "$totalFocusMinutes ${stringResource(R.string.unit_mins)}",
             icon = Icons.Default.HourglassTop,
             accentColor = PrimaryBlueLight,
             modifier = Modifier.weight(1f)
@@ -176,13 +209,13 @@ fun HistoryScreen(
               verticalAlignment = Alignment.CenterVertically
             ) {
               Text(
-                text = "Son 7 Günlük Ardıcıllıq",
+                text = stringResource(R.string.last_7_days),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary
               )
               Text(
-                text = "Daimi Vərdiş",
+                text = stringResource(R.string.consistency_badge),
                 style = MaterialTheme.typography.labelSmall,
                 color = AccentEmerald,
                 fontWeight = FontWeight.SemiBold
@@ -203,10 +236,7 @@ fun HistoryScreen(
                       .clip(RoundedCornerShape(8.dp))
                       .background(if (isDone) AccentEmerald else SurfaceCard)
                       .border(
-                        BorderStroke(
-                          1.dp,
-                          if (isDone) AccentEmerald else SurfaceBorder
-                        ),
+                        BorderStroke(1.dp, if (isDone) AccentEmerald else SurfaceBorder),
                         RoundedCornerShape(8.dp)
                       ),
                     contentAlignment = Alignment.Center
@@ -237,7 +267,7 @@ fun HistoryScreen(
       // Focus Sessions History
       item {
         Text(
-          text = "Son Fokus Seansları",
+          text = stringResource(R.string.recent_focus_sessions),
           style = MaterialTheme.typography.titleMedium,
           fontWeight = FontWeight.Bold,
           color = TextPrimary
@@ -254,20 +284,20 @@ fun HistoryScreen(
             Box(
               modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
+                .padding(18.dp),
               contentAlignment = Alignment.Center
             ) {
               Text(
-                text = "Hələ heç bir fokus seansı qeydə alınmayıb. Fokus Taymerindən istifadə edərək ilk seansı tamamlayın.",
+                text = stringResource(R.string.no_focus_sessions),
                 style = MaterialTheme.typography.bodySmall,
                 color = TextMuted,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                textAlign = TextAlign.Center
               )
             }
           }
         }
       } else {
-        items(focusSessions.take(10), key = { it.id }) { session ->
+        items(focusSessions.take(5), key = { it.id }) { session ->
           Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
@@ -292,14 +322,14 @@ fun HistoryScreen(
                   Icon(
                     imageVector = Icons.Default.HourglassTop,
                     contentDescription = null,
-                    tint = PrimaryBlue,
+                    tint = PrimaryBlueLight,
                     modifier = Modifier.size(18.dp)
                   )
                 }
-                Spacer(modifier = Modifier.size(12.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 Column {
                   Text(
-                    text = "${session.durationMinutes} Dəqiqəlik Fokus",
+                    text = stringResource(R.string.focus_session_item, session.durationMinutes),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = TextPrimary
@@ -319,7 +349,7 @@ fun HistoryScreen(
                   .padding(horizontal = 8.dp, vertical = 4.dp)
               ) {
                 Text(
-                  text = "Tamamlandı",
+                  text = stringResource(R.string.status_completed),
                   color = AccentEmerald,
                   fontSize = 11.sp,
                   fontWeight = FontWeight.SemiBold
@@ -328,6 +358,143 @@ fun HistoryScreen(
             }
           }
         }
+      }
+
+      // 25-Tier Streak Milestones (Migrated from retired Profile tab)
+      item {
+        Spacer(modifier = Modifier.height(6.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+          Text(
+            text = stringResource(R.string.milestones_section_title),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = TextPrimary
+          )
+
+          // Current Active Milestone Card
+          Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = SurfaceSlate),
+            border = BorderStroke(1.dp, AccentGold.copy(alpha = 0.4f))
+          ) {
+            Column(
+              modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+            ) {
+              Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+              ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                  Text(currentRank.badgeIcon, fontSize = 28.sp)
+                  Spacer(modifier = Modifier.width(10.dp))
+                  Column {
+                    Text(
+                      text = "${stringResource(R.string.level_label, currentRank.level)} — ${stringResource(currentRank.titleResId)}",
+                      style = MaterialTheme.typography.titleMedium,
+                      fontWeight = FontWeight.Bold,
+                      color = AccentGold
+                    )
+                    Text(
+                      text = "${stringResource(R.string.metric_streak)}: ${stringResource(R.string.days_full, activeStreak)}",
+                      style = MaterialTheme.typography.bodySmall,
+                      color = TextSecondary
+                    )
+                  }
+                }
+
+                Box(
+                  modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(AccentEmerald.copy(alpha = 0.2f))
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                  Text(
+                    text = stringResource(R.string.active_tier_badge),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = AccentEmerald
+                  )
+                }
+              }
+
+              if (nextRank != null) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                  modifier = Modifier.fillMaxWidth(),
+                  horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                  Text(
+                    text = stringResource(
+                      R.string.next_tier_label,
+                      nextRank.level,
+                      stringResource(nextRank.titleResId)
+                    ),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextMuted
+                  )
+                  Text(
+                    text = stringResource(
+                      R.string.days_remaining,
+                      (nextRank.requiredDays - activeStreak).coerceAtLeast(0)
+                    ),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = PrimaryBlueLight,
+                    fontWeight = FontWeight.Bold
+                  )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                LinearProgressIndicator(
+                  progress = { nextRankProgress },
+                  modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                  color = PrimaryBlue,
+                  trackColor = SurfaceCard
+                )
+              }
+            }
+          }
+
+          // Filter Chips
+          Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            val unlockedCount = DisciplineRankCatalog.ALL_RANKS.count { activeStreak >= it.requiredDays }
+            val lockedCount = DisciplineRankCatalog.ALL_RANKS.size - unlockedCount
+            val filterOptions = listOf(
+              stringResource(R.string.filter_all, DisciplineRankCatalog.ALL_RANKS.size),
+              stringResource(R.string.filter_unlocked, unlockedCount),
+              stringResource(R.string.filter_locked, lockedCount)
+            )
+            filterOptions.forEachIndexed { index, title ->
+              val isSelected = rankFilterIndex == index
+              Box(
+                modifier = Modifier
+                  .clip(RoundedCornerShape(8.dp))
+                  .background(if (isSelected) PrimaryBlue else SurfaceCard)
+                  .clickable { rankFilterIndex = index }
+                  .padding(horizontal = 12.dp, vertical = 6.dp)
+              ) {
+                Text(
+                  text = title,
+                  fontSize = 12.sp,
+                  fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                  color = if (isSelected) Color.White else TextSecondary
+                )
+              }
+            }
+          }
+        }
+      }
+
+      items(filteredRanks, key = { it.level }) { rank ->
+        RankCard(
+          rank = rank,
+          userStreak = activeStreak
+        )
       }
     }
   }

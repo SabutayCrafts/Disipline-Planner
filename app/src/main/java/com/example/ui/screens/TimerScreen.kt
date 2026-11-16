@@ -18,8 +18,18 @@
 
 package com.example.ui.screens
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,12 +41,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -45,27 +63,39 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
+import com.example.data.local.AppSettings
+import com.example.focus.FocusPermissionsStatus
+import com.example.focus.FocusTimerState
+import com.example.ui.theme.AccentCrimson
 import com.example.ui.theme.AccentEmerald
+import com.example.ui.theme.AccentGold
 import com.example.ui.theme.BackgroundNavy
 import com.example.ui.theme.PrimaryBlue
 import com.example.ui.theme.PrimaryBlueLight
@@ -75,47 +105,51 @@ import com.example.ui.theme.SurfaceSlate
 import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
-import kotlinx.coroutines.delay
 
 @Composable
 fun TimerScreen(
-  onSessionComplete: (durationMinutes: Int) -> Unit,
+  focusState: FocusTimerState,
+  appSettings: AppSettings,
+  permissionsStatus: FocusPermissionsStatus,
+  onSelectDuration: (Int) -> Unit,
+  onStartOrToggle: () -> Unit,
+  onStopFocus: () -> Unit,
+  onToggleDnd: (Boolean) -> Unit,
+  onOpenAppPicker: () -> Unit,
+  onOpenPermissions: () -> Unit,
+  onAcknowledgeCompletion: () -> Unit,
+  onDismissInterceptedApp: () -> Unit,
   modifier: Modifier = Modifier
 ) {
-  var selectedMinutes by remember { mutableIntStateOf(25) }
-  var totalSeconds by remember { mutableLongStateOf(25L * 60L) }
-  var remainingSeconds by remember { mutableLongStateOf(25L * 60L) }
-  var isRunning by remember { mutableStateOf(false) }
-  var showCelebrationDialog by remember { mutableStateOf(false) }
+  val haptics = LocalHapticFeedback.current
+  var showCustomDurationDialog by remember { mutableStateOf(false) }
 
   val presets = listOf(15, 25, 45, 60)
-
-  val quotes = remember {
-    listOf(
-      "İntizam — indi istədiyinlə ən çox istədiyin arasında seçim etməkdir.",
-      "Zəiflik bəhanə axtarır, iradə yol tapır.",
-      "Qələbənin ilk və ən böyük addımı özünə qalib gəlməkdir.",
-      "Fokusunu qoru, dünya səs-küylə doludur.",
-      "Hər tamamlanan dəqiqə səni daha güclü döyüşçü edir."
-    )
-  }
+  val quotes = stringArrayResource(R.array.stoic_quotes)
   var currentQuoteIndex by remember { mutableIntStateOf(0) }
 
-  // Timer Tick Coroutine
-  LaunchedEffect(isRunning, remainingSeconds) {
-    if (isRunning && remainingSeconds > 0) {
-      delay(1000L)
-      remainingSeconds--
-    } else if (isRunning && remainingSeconds == 0L) {
-      isRunning = false
-      onSessionComplete(selectedMinutes)
-      showCelebrationDialog = true
-    }
-  }
+  val rawProgress = if (focusState.totalSeconds > 0) {
+    focusState.remainingSeconds.toFloat() / focusState.totalSeconds.toFloat()
+  } else 0f
+  val animatedProgress by animateFloatAsState(
+    targetValue = rawProgress,
+    animationSpec = spring(stiffness = 300f),
+    label = "focus_arc"
+  )
 
-  val progress = if (totalSeconds > 0) (remainingSeconds.toFloat() / totalSeconds.toFloat()) else 0f
-  val minutes = remainingSeconds / 60
-  val seconds = remainingSeconds % 60
+  val infiniteTransition = rememberInfiniteTransition(label = "focus_pulse")
+  val pulseScale by infiniteTransition.animateFloat(
+    initialValue = 1f,
+    targetValue = if (focusState.isRunning && !focusState.isPaused) 1.035f else 1f,
+    animationSpec = infiniteRepeatable(
+      animation = tween(1400, easing = FastOutSlowInEasing),
+      repeatMode = RepeatMode.Reverse
+    ),
+    label = "pulse_scale"
+  )
+
+  val minutes = focusState.remainingSeconds / 60
+  val seconds = focusState.remainingSeconds % 60
   val timeDisplay = String.format("%02d:%02d", minutes, seconds)
 
   Box(
@@ -127,71 +161,108 @@ fun TimerScreen(
     Column(
       modifier = Modifier
         .fillMaxSize()
-        .padding(20.dp),
+        .verticalScroll(rememberScrollState())
+        .padding(horizontal = 16.dp, vertical = 14.dp),
       horizontalAlignment = Alignment.CenterHorizontally,
-      verticalArrangement = Arrangement.SpaceBetween
+      verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-      // Header
+      // 1. Title
       Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-          text = "Dərin Fokus Taymeri",
+          text = stringResource(R.string.focus_title),
           style = MaterialTheme.typography.headlineMedium,
           fontWeight = FontWeight.Bold,
           color = TextPrimary
         )
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(2.dp))
         Text(
-          text = "Fikrini cəmlə və diqqət yayındıran hər şeyi kənara qoy",
+          text = stringResource(R.string.focus_subtitle),
           style = MaterialTheme.typography.bodySmall,
           color = TextSecondary,
           textAlign = TextAlign.Center
         )
       }
 
-      // Presets Selector (when timer is not running)
+      // 2. Preset Chips + Custom Duration
       Row(
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
       ) {
         presets.forEach { min ->
-          val isSelected = selectedMinutes == min
+          val isSelected = focusState.selectedMinutes == min
           Box(
             modifier = Modifier
               .clip(RoundedCornerShape(10.dp))
               .background(if (isSelected) PrimaryBlue else SurfaceCard)
-              .clickable(enabled = !isRunning) {
-                selectedMinutes = min
-                totalSeconds = min * 60L
-                remainingSeconds = min * 60L
+              .border(
+                BorderStroke(1.dp, if (isSelected) PrimaryBlueLight else SurfaceBorder),
+                RoundedCornerShape(10.dp)
+              )
+              .clickable(enabled = !focusState.isRunning) {
+                onSelectDuration(min)
               }
-              .padding(horizontal = 14.dp, vertical = 8.dp)
+              .padding(horizontal = 12.dp, vertical = 8.dp)
           ) {
             Text(
-              text = "$min dəq",
-              fontSize = 13.sp,
+              text = stringResource(R.string.minutes_short, min),
+              fontSize = 12.sp,
               fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
               color = if (isSelected) Color.White else TextSecondary
             )
           }
         }
+
+        val isCustom = !presets.contains(focusState.selectedMinutes)
+        Box(
+          modifier = Modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(if (isCustom) PrimaryBlue else SurfaceCard)
+            .border(
+              BorderStroke(1.dp, if (isCustom) PrimaryBlueLight else SurfaceBorder),
+              RoundedCornerShape(10.dp)
+            )
+            .clickable(enabled = !focusState.isRunning) {
+              showCustomDurationDialog = true
+            }
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+        ) {
+          Text(
+            text = if (isCustom) stringResource(R.string.minutes_short, focusState.selectedMinutes)
+            else stringResource(R.string.custom_time),
+            fontSize = 12.sp,
+            fontWeight = if (isCustom) FontWeight.Bold else FontWeight.Medium,
+            color = if (isCustom) Color.White else TextSecondary
+          )
+        }
       }
 
-      // Circular Timer Canvas
+      // 3. Circular Timer Display with Pulsing Focus Shield Ring
       Box(
-        modifier = Modifier.size(240.dp),
+        modifier = Modifier
+          .size(220.dp)
+          .scale(pulseScale),
         contentAlignment = Alignment.Center
       ) {
-        Canvas(modifier = Modifier.size(240.dp)) {
+        Canvas(modifier = Modifier.size(220.dp)) {
           val strokeWidth = 12.dp.toPx()
-          // Background Track
           drawCircle(
             color = SurfaceSlate,
             style = Stroke(strokeWidth)
           )
-          // Progress Arc
+          if (focusState.isRunning && !focusState.isPaused) {
+            drawCircle(
+              color = PrimaryBlue.copy(alpha = 0.14f),
+              radius = size.minDimension / 2f - strokeWidth
+            )
+          }
           drawArc(
-            color = if (isRunning) PrimaryBlueLight else PrimaryBlue,
+            color = when {
+              focusState.isRunning && !focusState.isPaused -> AccentEmerald
+              focusState.isPaused -> AccentGold
+              else -> PrimaryBlueLight
+            },
             startAngle = -90f,
-            sweepAngle = 360f * progress,
+            sweepAngle = 360f * animatedProgress,
             useCenter = false,
             style = Stroke(strokeWidth, cap = StrokeCap.Round)
           )
@@ -204,59 +275,229 @@ fun TimerScreen(
             fontWeight = FontWeight.Bold,
             color = TextPrimary
           )
-          Spacer(modifier = Modifier.height(4.dp))
-          Text(
-            text = if (isRunning) "⚡ Fokusda" else "Hazır",
-            style = MaterialTheme.typography.labelMedium,
-            color = if (isRunning) PrimaryBlueLight else TextMuted
-          )
+          Spacer(modifier = Modifier.height(6.dp))
+          Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+          ) {
+            if (focusState.isRunning && !focusState.isPaused) {
+              Icon(
+                imageVector = Icons.Default.Shield,
+                contentDescription = null,
+                tint = AccentEmerald,
+                modifier = Modifier.size(14.dp)
+              )
+            }
+            Text(
+              text = stringResource(
+                when {
+                  focusState.isRunning && !focusState.isPaused -> R.string.focus_status_active
+                  focusState.isPaused -> R.string.focus_status_paused
+                  else -> R.string.focus_status_ready
+                }
+              ),
+              style = MaterialTheme.typography.labelSmall,
+              fontWeight = FontWeight.Bold,
+              color = when {
+                focusState.isRunning && !focusState.isPaused -> AccentEmerald
+                focusState.isPaused -> AccentGold
+                else -> TextMuted
+              }
+            )
+          }
         }
       }
 
-      // Controls (Play / Pause, Reset)
+      // 4. Play / Pause / Stop Controls
       Row(
         horizontalArrangement = Arrangement.spacedBy(20.dp),
         verticalAlignment = Alignment.CenterVertically
       ) {
-        IconButton(
-          onClick = {
-            isRunning = false
-            remainingSeconds = totalSeconds
-          },
-          modifier = Modifier
-            .size(52.dp)
-            .clip(CircleShape)
-            .background(SurfaceCard)
-        ) {
-          Icon(
-            imageVector = Icons.Default.Refresh,
-            contentDescription = "Sıfırla",
-            tint = TextSecondary,
-            modifier = Modifier.size(24.dp)
-          )
+        if (focusState.isRunning) {
+          IconButton(
+            onClick = {
+              if (appSettings.hapticsEnabled) {
+                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+              }
+              onStopFocus()
+            },
+            modifier = Modifier
+              .size(52.dp)
+              .clip(CircleShape)
+              .background(AccentCrimson.copy(alpha = 0.2f))
+              .border(1.dp, AccentCrimson, CircleShape)
+              .testTag("timer_stop_button")
+          ) {
+            Icon(
+              imageVector = Icons.Default.Stop,
+              contentDescription = stringResource(R.string.cd_reset_focus),
+              tint = AccentCrimson,
+              modifier = Modifier.size(24.dp)
+            )
+          }
         }
 
         Box(
           modifier = Modifier
             .size(72.dp)
             .clip(CircleShape)
-            .background(PrimaryBlue)
+            .background(
+              if (focusState.isRunning && !focusState.isPaused) AccentGold else PrimaryBlue
+            )
             .clickable {
-              isRunning = !isRunning
+              if (appSettings.hapticsEnabled) {
+                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+              }
+              onStartOrToggle()
             }
             .testTag("timer_toggle_button"),
           contentAlignment = Alignment.Center
         ) {
           Icon(
-            imageVector = if (isRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
-            contentDescription = if (isRunning) "Dondur" else "Başla",
+            imageVector = if (focusState.isRunning && !focusState.isPaused) Icons.Default.Pause
+            else Icons.Default.PlayArrow,
+            contentDescription = stringResource(
+              if (focusState.isRunning && !focusState.isPaused) R.string.cd_pause_focus
+              else R.string.cd_start_focus
+            ),
             tint = Color.White,
             modifier = Modifier.size(36.dp)
           )
         }
       }
 
-      // Stoic Quote Card
+      // 5. Real Distraction Blocker Control Card
+      Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceSlate),
+        border = BorderStroke(1.dp, SurfaceBorder)
+      ) {
+        Column(
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+          verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+              Icon(
+                imageVector = Icons.Default.Shield,
+                contentDescription = null,
+                tint = PrimaryBlueLight,
+                modifier = Modifier.size(20.dp)
+              )
+              Spacer(modifier = Modifier.width(8.dp))
+              Column {
+                Text(
+                  text = stringResource(R.string.blocker_panel_title),
+                  style = MaterialTheme.typography.titleMedium,
+                  fontWeight = FontWeight.Bold,
+                  color = TextPrimary
+                )
+                Text(
+                  text = if (appSettings.blockedPackages.isEmpty()) {
+                    stringResource(R.string.blocker_no_apps_selected)
+                  } else {
+                    stringResource(R.string.blocker_apps_selected, appSettings.blockedPackages.size)
+                  },
+                  style = MaterialTheme.typography.labelSmall,
+                  color = if (appSettings.blockedPackages.isEmpty()) TextMuted else PrimaryBlueLight
+                )
+              }
+            }
+
+            Icon(
+              imageVector = if (permissionsStatus.allBlockerPermissionsGranted) Icons.Default.CheckCircle
+              else Icons.Default.Warning,
+              contentDescription = null,
+              tint = if (permissionsStatus.allBlockerPermissionsGranted) AccentEmerald else AccentGold,
+              modifier = Modifier.size(20.dp)
+            )
+          }
+
+          // DND Toggle Row
+          Row(
+            modifier = Modifier
+              .fillMaxWidth()
+              .clip(RoundedCornerShape(12.dp))
+              .background(SurfaceCard)
+              .padding(horizontal = 12.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            Column(modifier = Modifier.weight(1f)) {
+              Text(
+                text = stringResource(R.string.dnd_toggle_label),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = TextPrimary
+              )
+              Text(
+                text = stringResource(R.string.dnd_toggle_desc),
+                style = MaterialTheme.typography.labelSmall,
+                color = TextMuted
+              )
+            }
+            Switch(
+              checked = appSettings.dndEnabled,
+              onCheckedChange = onToggleDnd,
+              colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = PrimaryBlue
+              )
+            )
+          }
+
+          // Action Buttons: Choose Apps & Permissions
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+          ) {
+            OutlinedButton(
+              onClick = onOpenAppPicker,
+              modifier = Modifier.weight(1f),
+              border = BorderStroke(1.dp, PrimaryBlueLight.copy(alpha = 0.6f)),
+              shape = RoundedCornerShape(12.dp)
+            ) {
+              Icon(Icons.Default.Apps, contentDescription = null, tint = PrimaryBlueLight, modifier = Modifier.size(16.dp))
+              Spacer(modifier = Modifier.width(6.dp))
+              Text(stringResource(R.string.btn_choose_apps), color = PrimaryBlueLight, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            }
+
+            OutlinedButton(
+              onClick = onOpenPermissions,
+              modifier = Modifier.weight(1f),
+              border = BorderStroke(
+                1.dp,
+                if (permissionsStatus.allBlockerPermissionsGranted) AccentEmerald.copy(alpha = 0.5f)
+                else AccentGold.copy(alpha = 0.7f)
+              ),
+              shape = RoundedCornerShape(12.dp)
+            ) {
+              Icon(
+                Icons.Default.Security,
+                contentDescription = null,
+                tint = if (permissionsStatus.allBlockerPermissionsGranted) AccentEmerald else AccentGold,
+                modifier = Modifier.size(16.dp)
+              )
+              Spacer(modifier = Modifier.width(6.dp))
+              Text(
+                stringResource(R.string.btn_permissions),
+                color = if (permissionsStatus.allBlockerPermissionsGranted) AccentEmerald else AccentGold,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold
+              )
+            }
+          }
+        }
+      }
+
+      // 6. Stoic Quote Card
       Card(
         modifier = Modifier
           .fillMaxWidth()
@@ -264,8 +505,8 @@ fun TimerScreen(
             currentQuoteIndex = (currentQuoteIndex + 1) % quotes.size
           },
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceSlate),
-        border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceBorder)
+        colors = CardDefaults.cardColors(containerColor = SurfaceCard),
+        border = BorderStroke(1.dp, SurfaceBorder)
       ) {
         Column(
           modifier = Modifier
@@ -274,7 +515,7 @@ fun TimerScreen(
           horizontalAlignment = Alignment.CenterHorizontally
         ) {
           Text(
-            text = "“${quotes[currentQuoteIndex]}”",
+            text = "“${quotes[currentQuoteIndex % quotes.size]}”",
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium,
             color = TextSecondary,
@@ -282,7 +523,7 @@ fun TimerScreen(
           )
           Spacer(modifier = Modifier.height(4.dp))
           Text(
-            text = "Dəyişmək üçün toxun 🔄",
+            text = "${stringResource(R.string.tap_to_change_quote)} 🔄",
             style = MaterialTheme.typography.labelSmall,
             color = TextMuted,
             fontSize = 10.sp
@@ -291,14 +532,56 @@ fun TimerScreen(
       }
     }
 
-    // Celebration Dialog when focus session finishes
-    if (showCelebrationDialog) {
+    if (showCustomDurationDialog) {
+      CustomFocusDurationDialog(
+        initialMinutes = focusState.selectedMinutes,
+        onConfirm = { mins ->
+          onSelectDuration(mins)
+          showCustomDurationDialog = false
+        },
+        onDismiss = { showCustomDurationDialog = false }
+      )
+    }
+
+    // Intercepted Blocked App Shield Alert (fallback when returning to MainActivity)
+    focusState.interceptedAppName?.let { blockedApp ->
       AlertDialog(
-        onDismissRequest = { showCelebrationDialog = false },
+        onDismissRequest = onDismissInterceptedApp,
         containerColor = SurfaceSlate,
         title = {
           Text(
-            text = "🏆 Əla İş! Fokus Seansı Tamamlandı",
+            text = "🛡️ ${stringResource(R.string.shield_title)}",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = AccentCrimson
+          )
+        },
+        text = {
+          Text(
+            text = stringResource(R.string.shield_message, blockedApp),
+            style = MaterialTheme.typography.bodyMedium,
+            color = TextPrimary
+          )
+        },
+        confirmButton = {
+          Button(
+            onClick = onDismissInterceptedApp,
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
+          ) {
+            Text(stringResource(R.string.shield_return_btn), color = Color.White, fontWeight = FontWeight.Bold)
+          }
+        }
+      )
+    }
+
+    // Session Completed Dialog
+    focusState.completedSessionMinutes?.let { completedMins ->
+      AlertDialog(
+        onDismissRequest = onAcknowledgeCompletion,
+        containerColor = SurfaceSlate,
+        title = {
+          Text(
+            text = "🏆 ${stringResource(R.string.focus_complete_title)}",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = AccentEmerald
@@ -306,20 +589,17 @@ fun TimerScreen(
         },
         text = {
           Text(
-            text = "$selectedMinutes dəqiqəlik dərin fokus seansını uğurla başa vurdunuz və intizam profilinizə qeyd olundu!",
+            text = stringResource(R.string.focus_complete_body, completedMins),
             style = MaterialTheme.typography.bodyMedium,
             color = TextPrimary
           )
         },
         confirmButton = {
           Button(
-            onClick = {
-              showCelebrationDialog = false
-              remainingSeconds = totalSeconds
-            },
+            onClick = onAcknowledgeCompletion,
             colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
           ) {
-            Text("Davam Et", color = Color.White, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.btn_continue), color = Color.White, fontWeight = FontWeight.Bold)
           }
         }
       )
