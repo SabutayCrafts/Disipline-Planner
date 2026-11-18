@@ -47,6 +47,18 @@ data class FocusPermissionsStatus(
 ) {
   val allBlockerPermissionsGranted: Boolean
     get() = hasDnd && hasUsageStats && hasOverlay
+
+  fun hasMissingPermissionsForFocus(
+    dndEnabled: Boolean,
+    hasBlockedApps: Boolean
+  ): Boolean {
+    if (!hasNotifications) return true
+    if (dndEnabled && !hasDnd) return true
+    if (hasBlockedApps && (!hasUsageStats || !hasOverlay)) return true
+    // Also prompt on initial Focus setup when core shield permissions haven't been granted yet
+    if (!hasDnd && !hasUsageStats && !hasOverlay) return true
+    return false
+  }
 }
 
 object FocusPermissionHelper {
@@ -60,13 +72,13 @@ object FocusPermissionHelper {
     )
   }
 
-  fun hasDndPermission(context: Context): Boolean {
+  fun hasDndPermission(context: Context): Boolean = runCatching {
     val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
-    return nm?.isNotificationPolicyAccessGranted == true
-  }
+    nm?.isNotificationPolicyAccessGranted == true
+  }.getOrDefault(false)
 
   @Suppress("DEPRECATION")
-  fun hasUsageStatsPermission(context: Context): Boolean {
+  fun hasUsageStatsPermission(context: Context): Boolean = runCatching {
     val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as? AppOpsManager ?: return false
     val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
       appOps.unsafeCheckOpNoThrow(
@@ -81,15 +93,15 @@ object FocusPermissionHelper {
         context.packageName
       )
     }
-    return mode == AppOpsManager.MODE_ALLOWED
-  }
+    mode == AppOpsManager.MODE_ALLOWED
+  }.getOrDefault(false)
 
-  fun hasOverlayPermission(context: Context): Boolean {
-    return Settings.canDrawOverlays(context)
-  }
+  fun hasOverlayPermission(context: Context): Boolean = runCatching {
+    Settings.canDrawOverlays(context)
+  }.getOrDefault(false)
 
-  fun hasNotificationPermission(context: Context): Boolean {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+  fun hasNotificationPermission(context: Context): Boolean = runCatching {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
       ContextCompat.checkSelfPermission(
         context,
         Manifest.permission.POST_NOTIFICATIONS
@@ -97,30 +109,64 @@ object FocusPermissionHelper {
     } else {
       true
     }
+  }.getOrDefault(true)
+
+  fun openDndSettings(context: Context): Boolean {
+    return launchSettingsWithFallback(
+      context,
+      Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS),
+      appDetailsIntent(context),
+      Intent(Settings.ACTION_SETTINGS)
+    )
   }
 
-  fun openDndSettings(context: Context) {
-    val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS).apply {
-      addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    }
-    runCatching { context.startActivity(intent) }
+  fun openUsageStatsSettings(context: Context): Boolean {
+    val withPkg = Intent(
+      Settings.ACTION_USAGE_ACCESS_SETTINGS,
+      Uri.fromParts("package", context.packageName, null)
+    )
+    return launchSettingsWithFallback(
+      context,
+      withPkg,
+      Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS),
+      appDetailsIntent(context),
+      Intent(Settings.ACTION_SETTINGS)
+    )
   }
 
-  fun openUsageStatsSettings(context: Context) {
-    val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).apply {
-      addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    }
-    runCatching { context.startActivity(intent) }
-  }
-
-  fun openOverlaySettings(context: Context) {
-    val intent = Intent(
+  fun openOverlaySettings(context: Context): Boolean {
+    val withPkg = Intent(
       Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
       Uri.parse("package:${context.packageName}")
-    ).apply {
-      addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    )
+    return launchSettingsWithFallback(
+      context,
+      withPkg,
+      Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION),
+      appDetailsIntent(context),
+      Intent(Settings.ACTION_SETTINGS)
+    )
+  }
+
+  private fun appDetailsIntent(context: Context): Intent {
+    return Intent(
+      Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+      Uri.fromParts("package", context.packageName, null)
+    )
+  }
+
+  private fun launchSettingsWithFallback(context: Context, vararg intents: Intent): Boolean {
+    for (candidate in intents) {
+      val prepared = Intent(candidate).apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+      }
+      val started = runCatching {
+        context.startActivity(prepared)
+        true
+      }.getOrDefault(false)
+      if (started) return true
     }
-    runCatching { context.startActivity(intent) }
+    return false
   }
 
   suspend fun getLaunchableApps(context: Context): List<InstalledAppInfo> = withContext(Dispatchers.IO) {

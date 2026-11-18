@@ -19,6 +19,8 @@
 package com.example
 
 import com.example.alarm.AlarmHelper
+import com.example.alarm.AlarmRepeatMode
+import com.example.focus.FocusPermissionsStatus
 import com.example.focus.FocusStateHolder
 import com.example.model.DisciplineRankCatalog
 import com.example.model.HabitCategories
@@ -72,11 +74,51 @@ class ExampleUnitTest {
   }
 
   @Test
-  fun testAlarmTimeFormattingAndCategories() {
+  fun testAlarmTimeFormattingRepeatModesAndCategories() {
     assertEquals("07:05", AlarmHelper.formatTime(7, 5))
     assertEquals("21:30", AlarmHelper.formatTime(21, 30))
+    assertEquals(0, AlarmRepeatMode.ONCE.toCalendarDays().size)
+    assertEquals(7, AlarmRepeatMode.EVERY_DAY.toCalendarDays().size)
+    assertEquals(5, AlarmRepeatMode.WEEKDAYS.toCalendarDays().size)
+
+    val (nowH, nowM) = AlarmHelper.getCurrentHourMinute()
+    assertTrue(nowH in 0..23)
+    assertTrue(nowM in 0..59)
+
+    val now = 1_700_000_000_000L
+    val nextTrigger = AlarmHelper.computeNextTriggerMillis(nowH, nowM, AlarmRepeatMode.EVERY_DAY, now)
+    assertTrue(nextTrigger > now)
+
     assertEquals(R.string.cat_health, HabitCategories.getLabelRes("health"))
     assertEquals(R.string.cat_mind, HabitCategories.getLabelRes("Zehin & Fokus"))
+  }
+
+  @Test
+  fun testFocusPermissionsMissingDetection() {
+    val noneGranted = FocusPermissionsStatus(
+      hasDnd = false,
+      hasUsageStats = false,
+      hasOverlay = false,
+      hasNotifications = false
+    )
+    assertTrue(noneGranted.hasMissingPermissionsForFocus(dndEnabled = true, hasBlockedApps = false))
+
+    val onlyDndMissing = FocusPermissionsStatus(
+      hasDnd = false,
+      hasUsageStats = true,
+      hasOverlay = true,
+      hasNotifications = true
+    )
+    assertTrue(onlyDndMissing.hasMissingPermissionsForFocus(dndEnabled = true, hasBlockedApps = false))
+    assertFalse(onlyDndMissing.hasMissingPermissionsForFocus(dndEnabled = false, hasBlockedApps = true))
+
+    val allGranted = FocusPermissionsStatus(
+      hasDnd = true,
+      hasUsageStats = true,
+      hasOverlay = true,
+      hasNotifications = true
+    )
+    assertFalse(allGranted.hasMissingPermissionsForFocus(dndEnabled = true, hasBlockedApps = true))
   }
 
   @Test

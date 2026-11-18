@@ -21,15 +21,15 @@
     <string name="settings_title">Ayarlar</string>
     <string name="settings_desc">Dil, səs və diqqət bloklayıcısı</string>
 
-    <!-- Today Screen -->
+    <!-- Today Screen & Clear Alarm Section -->
     <string name="today_title">Bugünkü İntizam</string>
     <string name="daily_progress">Günün İrəliləyişi</string>
     <string name="completed_fraction">%1$d / %2$d tamamlandı</string>
     <string name="progress_complete_msg">Bütün günlük sözlər tutuldu. Sarsılmaz iradə!</string>
     <string name="progress_active_msg">Tempi qoruyun və irəli gedin.</string>
     <string name="progress_start_msg">Bu günün icrasına başlayın.</string>
-    <string name="empty_habits_title">Hələ heç bir vərdiş əlavə edilməyib</string>
-    <string name="empty_habits_subtitle">İlk gündəlik intizam vərdişinizi yaratmaq üçün aşağıdakı + düyməsinə toxunun.</string>
+    <string name="empty_habits_title">Hələ heç bir tapşırıq əlavə edilmiyib</string>
+    <string name="empty_habits_subtitle">İlk gündəlik tapşırığınızı yaratmaq üçün aşağıdakı + düyməsinə toxunun.</string>
     <string name="cd_quick_add">Yeni Vərdiş Əlavə Et</string>
     <string name="cd_completed">Tamamlandı</string>
     <string name="cd_set_alarm">Saat Tətbiqində Alarm Qur</string>
@@ -39,6 +39,33 @@
     <string name="alarm_launched_toast">Alarm qurmaq üçün Saat tətbiqi açılır (%1$02d:%2$02d)</string>
     <string name="alarm_not_supported_toast">Alarm qurmaq üçün sistem Saat tətbiqi tapılmadı</string>
 
+    <!-- Clear Phone Alarm Card & Quick Alarm Dialog -->
+    <string name="alarms_card_title">Telefon Alarmları &amp; Xatırladıcılar</string>
+    <string name="alarms_card_subtitle">Vərdişləriniz üçün birbaşa telefonun Saat tətbiqinə alarm qurun</string>
+    <string name="alarms_active_count">%1$d planlaşdırılmış alarm</string>
+    <string name="alarms_none_set">Hələ heç bir alarm qurulmayıb</string>
+    <string name="btn_set_alarm_now">+ Alarm Qur</string>
+    <string name="btn_open_clock">Saatı Aç</string>
+    <string name="btn_add_alarm_chip">+ Alarm</string>
+    <string name="quick_alarm_dialog_title">Telefon Alarmı Qur</string>
+    <string name="quick_alarm_label_hint">Alarm Adı (məs: Səhər İdmanı)</string>
+    <string name="quick_alarm_presets">Sürətli Saat Seçimləri</string>
+    <string name="quick_alarm_choose_custom">Başqa Saat Seç</string>
+    <string name="quick_alarm_repeat_label">Təkrar Günləri</string>
+    <string name="repeat_once">Bir Dəfə</string>
+    <string name="repeat_daily">Hər Gün</string>
+    <string name="repeat_weekdays">Həftəiçi</string>
+    <string name="btn_create_clock_alarm">Alarm Qur (%1$02d:%2$02d)</string>
+    <string name="current_time_label">Cari saat: %1$02d:%2$02d</string>
+    <string name="alarm_saved_and_clock_toast">Alarm quruldu (%1$02d:%2$02d) — Saat tətbiqi açılır</string>
+    <string name="alarm_saved_inapp_toast">Alarm quruldu: %1$02d:%2$02d</string>
+    <string name="alarm_disabled_toast">Alarm söndürüldü</string>
+    <string name="alarm_deleted_toast">Alarm silindi</string>
+    <string name="alarm_channel_name">İntizam Alarmları</string>
+    <string name="alarm_channel_desc">Planlaşdırılmış tapşırıq və gündəlik alarmları səsləndirir</string>
+    <string name="alarm_notif_subtitle">Planlaşdırılmış intizam vaxtıdır • %1$02d:%2$02d</string>
+    <string name="alarm_dismiss_action">Bağla</string>
+
     <!-- Add / Edit Habit Dialog -->
     <string name="dialog_new_habit">Yeni İntizam Vərdişi</string>
     <string name="dialog_edit_habit">Vərdişə Düzəliş Et</string>
@@ -47,10 +74,10 @@
     <string name="label_habit_desc">Məqsəd və ya Qeyd (İxtiyari)</string>
     <string name="label_category">Kateqoriya</string>
     <string name="label_reminder_time">Gündəlik Alarm Xatırladıcısı</string>
-    <string name="label_enable_alarm">Telefon Alarmı Qur</string>
+    <string name="label_enable_alarm">Telefonun Saatında Alarm Qur</string>
     <string name="label_pick_time">Saat Seç</string>
-    <string name="label_time_not_set">Xatırlatma saatı seçilməyib</string>
-    <string name="label_sync_clock_now">Saxla və Saat Alarmını Aç</string>
+    <string name="label_time_not_set">Sürətli saat seçin və ya özünüz təyin edin</string>
+    <string name="label_sync_clock_now">Saxla və Saat Alarmını Qur</string>
 
     <!-- Categories -->
     <string name="cat_health">Sağlamlıq</string>
@@ -77,13 +104,16 @@
     <string name="btn_choose_apps">Tətbiqləri Seç</string>
     <string name="btn_permissions">İcazələr</string>
     <string name="dnd_toggle_label">Avtomatik Narahat Etmə (DND)</string>
-    <string name="dnd_toggle_desc">Fokus zamanı bildirişləri susdur</string>
+    <string name="dnd_toggle_desc">Fokus zamanı bildirişləri susdur (alarmlar işləyir)</string>
     <string name="focus_complete_title">Fokus Seansı Tamamlandı!</string>
     <string name="focus_complete_body">%1$d dəqiqəlik yayındırıcısız dərin fokus seansını uğurla başa vurdunuz. Statistikaya əlavə edildi.</string>
     <string name="btn_continue">Davam Et</string>
     <string name="tap_to_change_quote">Dəyişmək üçün toxun</string>
     <string name="custom_minutes_dialog_title">Xüsusi Fokus Müddəti</string>
     <string name="custom_minutes_label">Dəqiqə (1 – 180)</string>
+    <string name="perms_missing_banner">Avtomatik tətbiq bloklaması və DND üçün icazələr lazımdır</string>
+    <string name="btn_start_anyway">Yalnız Taymeri Başlat</string>
+    <string name="btn_start_with_shield">Fokus Qalxanını Başlat</string>
 
     <!-- Focus Shield Overlay & Notification -->
     <string name="shield_title">Fokus Qalxanı Aktivdir</string>
@@ -97,8 +127,8 @@
     <string name="fgs_notif_stop">Seansı Bitir</string>
 
     <!-- Blocker Permissions & App Picker -->
-    <string name="perms_dialog_title">Bloklayıcı İcazələri</string>
-    <string name="perms_dialog_subtitle">Fokus rejiminin bildirişləri susdurması və yayındırıcı tətbiqləri real bloklaması üçün icazələri verin.</string>
+    <string name="perms_dialog_title">Fokus Rejimi İcazələri</string>
+    <string name="perms_dialog_subtitle">Fokus rejiminin bildirişləri susdurması və yayındırıcı tətbiqləri real bloklaması üçün aşağıdakı icazələri verin:</string>
     <string name="perm_dnd_title">Narahat Etmə (DND) İcazəsi</string>
     <string name="perm_dnd_desc">Fokus zamanı gələn bildirişləri susdurur</string>
     <string name="perm_usage_title">İstifadə Statistikası (Usage Access)</string>

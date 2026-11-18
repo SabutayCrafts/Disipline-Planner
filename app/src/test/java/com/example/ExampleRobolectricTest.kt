@@ -19,8 +19,12 @@
 package com.example
 
 import android.content.Context
+import android.content.ContextWrapper
 import androidx.test.core.app.ApplicationProvider
+import com.example.util.LocaleHelper
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -35,5 +39,18 @@ class ExampleRobolectricTest {
     val context = ApplicationProvider.getApplicationContext<Context>()
     val appName = context.getString(R.string.app_name)
     assertEquals("Discipline Planner", appName)
+  }
+
+  @Test
+  fun `localized context preserves base wrapper chain and resolves az strings`() {
+    val base = ApplicationProvider.getApplicationContext<Context>()
+    val azCtx = LocaleHelper.createLocalizedContext(base, "az")
+    assertTrue(azCtx is ContextWrapper)
+    assertSame(base, (azCtx as ContextWrapper).baseContext)
+    assertEquals("Bugün", azCtx.getString(R.string.nav_today))
+    assertEquals("Hələ heç bir tapşırıq əlavə edilmiyib", azCtx.getString(R.string.empty_habits_title))
+
+    val enCtx = LocaleHelper.createLocalizedContext(base, "en")
+    assertEquals("Today", enCtx.getString(R.string.nav_today))
   }
 }

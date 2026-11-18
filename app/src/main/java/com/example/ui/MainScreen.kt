@@ -87,6 +87,13 @@ import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
 import kotlinx.coroutines.launch
 
+enum class ActiveModal {
+  NONE,
+  SETTINGS,
+  APP_PICKER,
+  PERMISSIONS
+}
+
 sealed class NavigationTab(
   val index: Int,
   @StringRes val titleResId: Int,
@@ -106,14 +113,14 @@ fun MainScreen(
   modifier: Modifier = Modifier
 ) {
   var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
-  var showSettingsSheet by remember { mutableStateOf(false) }
-  var showAppPickerDialog by remember { mutableStateOf(false) }
-  var showPermissionsDialog by remember { mutableStateOf(false) }
+  var activeModal by remember { mutableStateOf(ActiveModal.NONE) }
+  var pendingFocusStart by remember { mutableStateOf(false) }
 
   val snackbarHostState = remember { SnackbarHostState() }
   val scope = rememberCoroutineScope()
 
   val habits by viewModel.habitsUiState.collectAsStateWithLifecycle()
+  val scheduledAlarms by viewModel.scheduledAlarms.collectAsStateWithLifecycle()
   val activeStreak by viewModel.activeStreak.collectAsStateWithLifecycle()
   val currentRank by viewModel.currentRank.collectAsStateWithLifecycle()
   val nextRank by viewModel.nextRank.collectAsStateWithLifecycle()
@@ -143,6 +150,22 @@ fun MainScreen(
       snackbarHostState.currentSnackbarData?.dismiss()
       snackbarHostState.showSnackbar(msg)
     }
+  }
+
+  fun handleStartOrToggleFocus() {
+    if (!focusState.isRunning) {
+      val currentPerms = viewModel.refreshPermissions()
+      val missingPermissions = currentPerms.hasMissingPermissionsForFocus(
+        dndEnabled = appSettings.dndEnabled,
+        hasBlockedApps = appSettings.blockedPackages.isNotEmpty()
+      )
+      if (missingPermissions) {
+        pendingFocusStart = true
+        activeModal = ActiveModal.PERMISSIONS
+        return
+      }
+    }
+    viewModel.startOrToggleFocus()
   }
 
   Scaffold(
@@ -191,7 +214,7 @@ fun MainScreen(
 
           // Settings Gear Button
           IconButton(
-            onClick = { showSettingsSheet = true },
+            onClick = { activeModal = ActiveModal.SETTINGS },
             modifier = Modifier.testTag("top_settings_button")
           ) {
             Icon(
@@ -247,6 +270,7 @@ fun MainScreen(
       when (selectedTabIndex) {
         0 -> TodayScreen(
           habits = habits,
+          scheduledAlarms = scheduledAlarms,
           languageCode = appSettings.languageCode,
           hapticsEnabled = appSettings.hapticsEnabled,
           onToggleHabit = { habitId -> viewModel.toggleHabit(habitId) },
@@ -255,6 +279,11 @@ fun MainScreen(
           },
           onUpdateHabit = { habit -> viewModel.updateHabit(habit) },
           onDeleteHabit = { habitId -> viewModel.deleteHabit(habitId) },
+          onSaveAlarm = { title, hour, minute, repeatMode, linkedHabitId ->
+            viewModel.saveAndScheduleAlarm(title, hour, minute, repeatMode, linkedHabitId)
+          },
+          onToggleAlarm = { alarm, enabled -> viewModel.toggleAlarmEnabled(alarm, enabled) },
+          onDeleteAlarm = { alarm -> viewModel.deleteAlarm(alarm) },
           onShowMessage = ::showMessage
         )
 
@@ -263,11 +292,15 @@ fun MainScreen(
           appSettings = appSettings,
           permissionsStatus = permissionsStatus,
           onSelectDuration = { viewModel.selectFocusMinutes(it) },
-          onStartOrToggle = { viewModel.startOrToggleFocus() },
+          onStartOrToggle = ::handleStartOrToggleFocus,
           onStopFocus = { viewModel.stopFocusSession() },
           onToggleDnd = { viewModel.setDndEnabled(it) },
-          onOpenAppPicker = { showAppPickerDialog = true },
-          onOpenPermissions = { showPermissionsDialog = true },
+          onOpenAppPicker = { activeModal = ActiveModal.APP_PICKER },
+          onOpenPermissions = {
+            pendingFocusStart = false
+            viewModel.refreshPermissions()
+            activeModal = ActiveModal.PERMISSIONS
+          },
           onAcknowledgeCompletion = { viewModel.acknowledgeFocusCompletion() },
           onDismissInterceptedApp = { viewModel.clearInterceptedAppAlert() }
         )
@@ -286,34 +319,45 @@ fun MainScreen(
     }
   }
 
-  if (showSettingsSheet) {
-    SettingsBottomSheet(
+  when (activeModal) {
+    ActiveModal.NONE -> Unit
+
+    ActiveModal.SETTINGS -> SettingsBottomSheet(
       settings = appSettings,
       onSelectLanguage = { code -> viewModel.setLanguage(code) },
       onToggleSound = { viewModel.setSoundEnabled(it) },
       onToggleHaptics = { viewModel.setHapticsEnabled(it) },
-      onOpenBlockedApps = { showAppPickerDialog = true },
-      onOpenPermissions = { showPermissionsDialog = true },
-      onDismiss = { showSettingsSheet = false }
+      onOpenBlockedApps = { activeModal = ActiveModal.APP_PICKER },
+      onOpenPermissions = {
+        pendingFocusStart = false
+        viewModel.refreshPermissions()
+        activeModal = ActiveModal.PERMISSIONS
+      },
+      onDismiss = { activeModal = ActiveModal.NONE }
     )
-  }
 
-  if (showAppPickerDialog) {
-    AppBlockerPickerDialog(
+    ActiveModal.APP_PICKER -> AppBlockerPickerDialog(
       installedApps = installedApps,
       isLoading = isLoadingApps,
       blockedPackages = appSettings.blockedPackages,
       onLoadApps = { viewModel.loadInstalledApps() },
       onToggleApp = { pkg -> viewModel.toggleBlockedApp(pkg) },
-      onDismiss = { showAppPickerDialog = false }
+      onDismiss = { activeModal = ActiveModal.NONE }
     )
-  }
 
-  if (showPermissionsDialog) {
-    FocusPermissionsDialog(
+    ActiveModal.PERMISSIONS -> FocusPermissionsDialog(
       status = permissionsStatus,
+      showStartFocusActions = pendingFocusStart,
+      onStartFocusNow = {
+        pendingFocusStart = false
+        activeModal = ActiveModal.NONE
+        viewModel.startOrToggleFocus()
+      },
       onRefresh = { viewModel.refreshPermissions() },
-      onDismiss = { showPermissionsDialog = false }
+      onDismiss = {
+        pendingFocusStart = false
+        activeModal = ActiveModal.NONE
+      }
     )
   }
 }

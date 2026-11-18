@@ -211,33 +211,45 @@ fun DisciplineCard(
             )
           }
 
-          // Scheduled Alarm Time Badge (if set)
-          if (item.habit.reminderHour != null && item.habit.reminderMinute != null) {
-            Box(
-              modifier = Modifier
-                .clip(RoundedCornerShape(6.dp))
-                .background(SurfaceCard)
-                .border(1.dp, SurfaceBorder, RoundedCornerShape(6.dp))
-                .clickable(onClick = onSetAlarm)
-                .padding(horizontal = 7.dp, vertical = 2.dp)
+          // Scheduled Alarm Time Badge OR Clear "+ Alarm" Action Pill
+          val hasScheduledTime = item.habit.reminderHour != null && item.habit.reminderMinute != null
+          Box(
+            modifier = Modifier
+              .clip(RoundedCornerShape(8.dp))
+              .background(
+                if (hasScheduledTime && item.habit.alarmEnabled) AccentGold.copy(alpha = 0.16f)
+                else SurfaceCard
+              )
+              .border(
+                1.dp,
+                if (hasScheduledTime && item.habit.alarmEnabled) AccentGold.copy(alpha = 0.55f)
+                else SurfaceBorder,
+                RoundedCornerShape(8.dp)
+              )
+              .clickable(onClick = onSetAlarm)
+              .padding(horizontal = 8.dp, vertical = 3.dp)
+              .testTag("alarm_habit_${item.habit.id}")
+          ) {
+            Row(
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-              Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(3.dp)
-              ) {
-                Icon(
-                  imageVector = Icons.Default.Alarm,
-                  contentDescription = stringResource(R.string.cd_set_alarm),
-                  tint = if (item.habit.alarmEnabled) AccentGold else TextSecondary,
-                  modifier = Modifier.size(12.dp)
-                )
-                Text(
-                  text = AlarmHelper.formatTime(item.habit.reminderHour, item.habit.reminderMinute),
-                  color = if (item.habit.alarmEnabled) AccentGold else TextSecondary,
-                  fontSize = 11.sp,
-                  fontWeight = FontWeight.SemiBold
-                )
-              }
+              Icon(
+                imageVector = Icons.Default.Alarm,
+                contentDescription = stringResource(R.string.cd_set_alarm),
+                tint = if (hasScheduledTime && item.habit.alarmEnabled) AccentGold else PrimaryBlueLight,
+                modifier = Modifier.size(13.dp)
+              )
+              Text(
+                text = if (hasScheduledTime) {
+                  AlarmHelper.formatTime(item.habit.reminderHour!!, item.habit.reminderMinute!!)
+                } else {
+                  stringResource(R.string.btn_add_alarm_chip)
+                },
+                color = if (hasScheduledTime && item.habit.alarmEnabled) AccentGold else PrimaryBlueLight,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold
+              )
             }
           }
 
@@ -258,21 +270,6 @@ fun DisciplineCard(
             }
           }
         }
-      }
-
-      // 3. Direct Clock Alarm Action + Overflow Menu
-      IconButton(
-        onClick = onSetAlarm,
-        modifier = Modifier
-          .size(40.dp)
-          .testTag("alarm_habit_${item.habit.id}")
-      ) {
-        Icon(
-          imageVector = Icons.Default.Alarm,
-          contentDescription = stringResource(R.string.cd_set_alarm),
-          tint = if (item.habit.alarmEnabled) AccentGold else TextMuted,
-          modifier = Modifier.size(20.dp)
-        )
       }
 
       Box {

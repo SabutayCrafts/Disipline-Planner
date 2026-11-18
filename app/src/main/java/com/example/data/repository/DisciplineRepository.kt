@@ -18,9 +18,11 @@
 
 package com.example.data.repository
 
+import com.example.data.local.dao.AlarmDao
 import com.example.data.local.dao.FocusSessionDao
 import com.example.data.local.dao.HabitDao
 import com.example.data.local.dao.HabitLogDao
+import com.example.data.local.entity.AlarmEntity
 import com.example.data.local.entity.FocusSessionEntity
 import com.example.data.local.entity.HabitEntity
 import com.example.data.local.entity.HabitLogEntity
@@ -33,7 +35,8 @@ import java.util.Locale
 class DisciplineRepository(
   private val habitDao: HabitDao,
   private val habitLogDao: HabitLogDao,
-  private val focusSessionDao: FocusSessionDao
+  private val focusSessionDao: FocusSessionDao,
+  private val alarmDao: AlarmDao
 ) {
   private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
 
@@ -54,6 +57,18 @@ class DisciplineRepository(
   fun getAllFocusSessions(): Flow<List<FocusSessionEntity>> = focusSessionDao.getAllFocusSessions()
 
   fun getTotalFocusMinutes(): Flow<Int> = focusSessionDao.getTotalFocusMinutes()
+
+  fun getAllAlarms(): Flow<List<AlarmEntity>> = alarmDao.getAllAlarms()
+
+  suspend fun getAlarmById(alarmId: Long): AlarmEntity? = alarmDao.getAlarmById(alarmId)
+
+  suspend fun getAlarmByHabitId(habitId: Long): AlarmEntity? = alarmDao.getAlarmByHabitId(habitId)
+
+  suspend fun insertOrUpdateAlarm(alarm: AlarmEntity): Long = alarmDao.insertAlarm(alarm)
+
+  suspend fun updateAlarm(alarm: AlarmEntity) = alarmDao.updateAlarm(alarm)
+
+  suspend fun deleteAlarm(alarmId: Long) = alarmDao.deleteAlarmById(alarmId)
 
   suspend fun toggleHabitCompletion(habitId: Long, dateString: String = getTodayDateString()): Boolean {
     val existing = habitLogDao.getLog(habitId, dateString)
@@ -76,6 +91,7 @@ class DisciplineRepository(
 
   suspend fun deleteHabit(habitId: Long) {
     habitLogDao.deleteLogsForHabit(habitId)
+    alarmDao.deleteByHabitId(habitId)
     habitDao.deleteHabitById(habitId)
   }
 
@@ -93,7 +109,7 @@ class DisciplineRepository(
    */
   fun calculateStreak(distinctDates: List<String>): Int {
     if (distinctDates.isEmpty()) return 0
-    val sortedDates = distinctDates.toSortedSet().reversed().toList()
+    val sortedDates = distinctDates.distinct().sortedDescending()
 
     val calendar = Calendar.getInstance()
     val today = dateFormat.format(calendar.time)

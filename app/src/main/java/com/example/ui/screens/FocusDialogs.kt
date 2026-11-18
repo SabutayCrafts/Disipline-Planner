@@ -40,9 +40,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.CheckCircle
@@ -51,6 +53,7 @@ import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -275,6 +278,8 @@ fun AppBlockerPickerDialog(
 @Composable
 fun FocusPermissionsDialog(
   status: FocusPermissionsStatus,
+  showStartFocusActions: Boolean = false,
+  onStartFocusNow: (() -> Unit)? = null,
   onRefresh: () -> Unit,
   onDismiss: () -> Unit
 ) {
@@ -297,7 +302,39 @@ fun FocusPermissionsDialog(
       )
     },
     text = {
-      Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+      Column(
+        modifier = Modifier
+          .fillMaxWidth()
+          .heightIn(max = 420.dp)
+          .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+      ) {
+        if (showStartFocusActions) {
+          Row(
+            modifier = Modifier
+              .fillMaxWidth()
+              .clip(RoundedCornerShape(10.dp))
+              .background(AccentGold.copy(alpha = 0.14f))
+              .border(1.dp, AccentGold.copy(alpha = 0.45f), RoundedCornerShape(10.dp))
+              .padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+          ) {
+            Icon(
+              imageVector = Icons.Default.Warning,
+              contentDescription = null,
+              tint = AccentGold,
+              modifier = Modifier.size(18.dp)
+            )
+            Text(
+              text = stringResource(R.string.perms_missing_banner),
+              style = MaterialTheme.typography.labelMedium,
+              color = AccentGold,
+              fontWeight = FontWeight.SemiBold
+            )
+          }
+        }
+
         Text(
           text = stringResource(R.string.perms_dialog_subtitle),
           style = MaterialTheme.typography.bodySmall,
@@ -334,22 +371,54 @@ fun FocusPermissionsDialog(
             title = stringResource(R.string.perm_notif_title),
             description = stringResource(R.string.perm_notif_desc),
             isGranted = status.hasNotifications,
-            onGrant = { notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }
+            onGrant = {
+              runCatching {
+                notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+              }
+            }
           )
         }
       }
     },
     confirmButton = {
-      Button(
-        onClick = {
-          onRefresh()
-          onDismiss()
-        },
-        colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
-      ) {
-        Text(stringResource(R.string.done), color = Color.White, fontWeight = FontWeight.Bold)
+      if (showStartFocusActions && onStartFocusNow != null) {
+        Button(
+          onClick = {
+            onRefresh()
+            onStartFocusNow()
+          },
+          colors = ButtonDefaults.buttonColors(
+            containerColor = if (status.allBlockerPermissionsGranted) AccentEmerald else PrimaryBlue
+          )
+        ) {
+          Text(
+            text = stringResource(
+              if (status.allBlockerPermissionsGranted) R.string.btn_start_with_shield
+              else R.string.btn_start_anyway
+            ),
+            color = Color.White,
+            fontWeight = FontWeight.Bold
+          )
+        }
+      } else {
+        Button(
+          onClick = {
+            onRefresh()
+            onDismiss()
+          },
+          colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
+        ) {
+          Text(stringResource(R.string.done), color = Color.White, fontWeight = FontWeight.Bold)
+        }
       }
-    }
+    },
+    dismissButton = if (showStartFocusActions) {
+      {
+        TextButton(onClick = onDismiss) {
+          Text(stringResource(R.string.cancel), color = TextMuted)
+        }
+      }
+    } else null
   )
 }
 

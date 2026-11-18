@@ -20,7 +20,10 @@ package com.example.util
 
 import android.app.LocaleManager
 import android.content.Context
+import android.content.ContextWrapper
+import android.content.res.AssetManager
 import android.content.res.Configuration
+import android.content.res.Resources
 import android.os.Build
 import android.os.LocaleList
 import java.util.Locale
@@ -30,6 +33,14 @@ data class SupportedLanguage(
   val nativeName: String,
   val flagEmoji: String
 )
+
+private class LocalizedContextWrapper(
+  base: Context,
+  private val localizedResourcesContext: Context
+) : ContextWrapper(base) {
+  override fun getResources(): Resources = localizedResourcesContext.resources
+  override fun getAssets(): AssetManager = localizedResourcesContext.assets
+}
 
 object LocaleHelper {
   val SUPPORTED_LANGUAGES = listOf(
@@ -43,7 +54,8 @@ object LocaleHelper {
     val config = Configuration(base.resources.configuration)
     config.setLocale(locale)
     config.setLocales(LocaleList(locale))
-    return base.createConfigurationContext(config)
+    val configContext = base.createConfigurationContext(config)
+    return LocalizedContextWrapper(base, configContext)
   }
 
   fun syncSystemAppLocale(context: Context, languageCode: String) {

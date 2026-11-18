@@ -259,6 +259,39 @@ fun AddEditHabitDialog(
             }
           }
 
+          // 1-Tap Quick Time Presets
+          FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+          ) {
+            listOf(7 to 0, 8 to 0, 12 to 0, 18 to 0, 21 to 0).forEach { (presetH, presetM) ->
+              val isSelected = reminderHour == presetH && reminderMinute == presetM
+              Box(
+                modifier = Modifier
+                  .clip(RoundedCornerShape(8.dp))
+                  .background(if (isSelected) AccentGold else SurfaceSlate)
+                  .border(
+                    1.dp,
+                    if (isSelected) AccentGold else SurfaceBorder,
+                    RoundedCornerShape(8.dp)
+                  )
+                  .clickable {
+                    reminderHour = presetH
+                    reminderMinute = presetM
+                    alarmEnabled = true
+                  }
+                  .padding(horizontal = 10.dp, vertical = 5.dp)
+              ) {
+                Text(
+                  text = AlarmHelper.formatTime(presetH, presetM),
+                  fontSize = 11.sp,
+                  fontWeight = FontWeight.Bold,
+                  color = if (isSelected) Color.Black else TextSecondary
+                )
+              }
+            }
+          }
+
           if (reminderHour != null && reminderMinute != null) {
             Row(
               modifier = Modifier.fillMaxWidth(),
@@ -325,20 +358,29 @@ fun AddEditHabitDialog(
   )
 
   if (showTimePicker) {
+    val nowTime = remember { AlarmHelper.getCurrentHourMinute() }
     val pickerState = rememberTimePickerState(
-      initialHour = reminderHour ?: 7,
-      initialMinute = reminderMinute ?: 30,
+      initialHour = reminderHour ?: nowTime.first,
+      initialMinute = reminderMinute ?: nowTime.second,
       is24Hour = true
     )
     AlertDialog(
       onDismissRequest = { showTimePicker = false },
       containerColor = SurfaceSlate,
       title = {
-        Text(
-          text = stringResource(R.string.label_pick_time),
-          color = TextPrimary,
-          fontWeight = FontWeight.Bold
-        )
+        Column {
+          Text(
+            text = stringResource(R.string.label_pick_time),
+            color = TextPrimary,
+            fontWeight = FontWeight.Bold
+          )
+          Spacer(modifier = Modifier.height(2.dp))
+          Text(
+            text = stringResource(R.string.current_time_label, nowTime.first, nowTime.second),
+            style = MaterialTheme.typography.labelMedium,
+            color = PrimaryBlueLight
+          )
+        }
       },
       text = {
         Box(

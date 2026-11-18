@@ -21,15 +21,15 @@
     <string name="settings_title">Settings</string>
     <string name="settings_desc">Language, audio &amp; distraction blocker</string>
 
-    <!-- Today Screen -->
+    <!-- Today Screen & Clear Alarm Section -->
     <string name="today_title">Today\'s Discipline</string>
     <string name="daily_progress">Daily Progress</string>
     <string name="completed_fraction">%1$d / %2$d Completed</string>
     <string name="progress_complete_msg">All daily promises kept. Unbreakable!</string>
     <string name="progress_active_msg">Keep the momentum going.</string>
     <string name="progress_start_msg">Begin execution today.</string>
-    <string name="empty_habits_title">No habits added yet</string>
-    <string name="empty_habits_subtitle">Tap the + button below to forge your first daily discipline.</string>
+    <string name="empty_habits_title">No tasks added yet</string>
+    <string name="empty_habits_subtitle">Tap the + button below to create your first daily task.</string>
     <string name="cd_quick_add">Add New Habit</string>
     <string name="cd_completed">Completed</string>
     <string name="cd_set_alarm">Set Alarm in Clock App</string>
@@ -39,6 +39,33 @@
     <string name="alarm_launched_toast">Opening Clock app to set alarm (%1$02d:%2$02d)</string>
     <string name="alarm_not_supported_toast">No Clock app found to schedule alarm</string>
 
+    <!-- Clear Phone Alarm Card & Quick Alarm Dialog -->
+    <string name="alarms_card_title">Phone Alarms &amp; Reminders</string>
+    <string name="alarms_card_subtitle">Schedule reliable wake &amp; habit alarms directly in your phone Clock app</string>
+    <string name="alarms_active_count">%1$d scheduled alarms</string>
+    <string name="alarms_none_set">No habit alarms scheduled yet</string>
+    <string name="btn_set_alarm_now">+ Set Alarm</string>
+    <string name="btn_open_clock">Open Clock</string>
+    <string name="btn_add_alarm_chip">+ Alarm</string>
+    <string name="quick_alarm_dialog_title">Schedule Phone Alarm</string>
+    <string name="quick_alarm_label_hint">Alarm Title (e.g. Morning Workout)</string>
+    <string name="quick_alarm_presets">Quick Time Presets</string>
+    <string name="quick_alarm_choose_custom">Custom Time</string>
+    <string name="quick_alarm_repeat_label">Repeat Days</string>
+    <string name="repeat_once">Once</string>
+    <string name="repeat_daily">Every Day</string>
+    <string name="repeat_weekdays">Weekdays</string>
+    <string name="btn_create_clock_alarm">Set Alarm (%1$02d:%2$02d)</string>
+    <string name="current_time_label">Current time: %1$02d:%2$02d</string>
+    <string name="alarm_saved_and_clock_toast">Alarm set (%1$02d:%2$02d) — Opening Clock app</string>
+    <string name="alarm_saved_inapp_toast">Alarm scheduled for %1$02d:%2$02d</string>
+    <string name="alarm_disabled_toast">Alarm turned off</string>
+    <string name="alarm_deleted_toast">Alarm removed</string>
+    <string name="alarm_channel_name">Discipline Alarms</string>
+    <string name="alarm_channel_desc">Rings and alerts for scheduled task alarms</string>
+    <string name="alarm_notif_subtitle">Scheduled discipline alarm • %1$02d:%2$02d</string>
+    <string name="alarm_dismiss_action">Dismiss</string>
+
     <!-- Add / Edit Habit Dialog -->
     <string name="dialog_new_habit">New Discipline</string>
     <string name="dialog_edit_habit">Edit Discipline</string>
@@ -47,10 +74,10 @@
     <string name="label_habit_desc">Note or Goal (Optional)</string>
     <string name="label_category">Category</string>
     <string name="label_reminder_time">Daily Alarm Reminder</string>
-    <string name="label_enable_alarm">Schedule Phone Alarm</string>
+    <string name="label_enable_alarm">Set Phone Alarm in Clock</string>
     <string name="label_pick_time">Pick Time</string>
-    <string name="label_time_not_set">No reminder time</string>
-    <string name="label_sync_clock_now">Save &amp; Open Clock Alarm</string>
+    <string name="label_time_not_set">Tap a preset or pick a time for alarm</string>
+    <string name="label_sync_clock_now">Save &amp; Set Clock Alarm</string>
 
     <!-- Categories -->
     <string name="cat_health">Health</string>
@@ -73,17 +100,20 @@
     <string name="cd_reset_focus">Reset Timer</string>
     <string name="blocker_panel_title">Distraction Blocker</string>
     <string name="blocker_apps_selected">%1$d apps blocked</string>
-    <string name="blocker_no_apps_selected">No apps selected yet</string>
+    <string name="blocker_no_apps_selected">No distracting apps selected yet</string>
     <string name="btn_choose_apps">Select Apps</string>
     <string name="btn_permissions">Permissions</string>
     <string name="dnd_toggle_label">Auto Do Not Disturb</string>
-    <string name="dnd_toggle_desc">Silence notifications during focus</string>
+    <string name="dnd_toggle_desc">Silence notifications during focus (alarms stay active)</string>
     <string name="focus_complete_title">Focus Session Complete!</string>
     <string name="focus_complete_body">You completed %1$d minutes of distraction-free deep focus. Added to your Statistics.</string>
     <string name="btn_continue">Continue</string>
     <string name="tap_to_change_quote">Tap for next quote</string>
     <string name="custom_minutes_dialog_title">Custom Focus Duration</string>
     <string name="custom_minutes_label">Minutes (1 – 180)</string>
+    <string name="perms_missing_banner">Permissions required for automatic app blocking &amp; DND</string>
+    <string name="btn_start_anyway">Start Timer Only</string>
+    <string name="btn_start_with_shield">Start Focus Shield Now</string>
 
     <!-- Focus Shield Overlay & Notification -->
     <string name="shield_title">Focus Shield Active</string>
@@ -97,8 +127,8 @@
     <string name="fgs_notif_stop">End Session</string>
 
     <!-- Blocker Permissions & App Picker -->
-    <string name="perms_dialog_title">Blocker Permissions</string>
-    <string name="perms_dialog_subtitle">Grant permissions so Focus Mode can genuinely silence notifications and block distracting apps.</string>
+    <string name="perms_dialog_title">Focus Mode Permissions</string>
+    <string name="perms_dialog_subtitle">To genuinely silence notifications and block distracting apps, please grant the permissions below:</string>
     <string name="perm_dnd_title">Do Not Disturb Access</string>
     <string name="perm_dnd_desc">Silences incoming alerts during Focus</string>
     <string name="perm_usage_title">Usage Access</string>

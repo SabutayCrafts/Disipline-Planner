@@ -453,6 +453,39 @@ fun TimerScreen(
             )
           }
 
+          // Missing Permissions Banner (tappable for instant grant)
+          val missingAnyPerm = permissionsStatus.hasMissingPermissionsForFocus(
+            dndEnabled = appSettings.dndEnabled,
+            hasBlockedApps = appSettings.blockedPackages.isNotEmpty()
+          )
+          if (missingAnyPerm) {
+            Row(
+              modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(10.dp))
+                .background(AccentGold.copy(alpha = 0.14f))
+                .border(1.dp, AccentGold.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
+                .clickable(onClick = onOpenPermissions)
+                .padding(horizontal = 10.dp, vertical = 8.dp),
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+              Icon(
+                imageVector = Icons.Default.Warning,
+                contentDescription = null,
+                tint = AccentGold,
+                modifier = Modifier.size(16.dp)
+              )
+              Text(
+                text = stringResource(R.string.perms_missing_banner),
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = AccentGold,
+                modifier = Modifier.weight(1f)
+              )
+            }
+          }
+
           // Action Buttons: Choose Apps & Permissions
           Row(
             modifier = Modifier.fillMaxWidth(),

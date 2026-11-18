@@ -36,6 +36,7 @@ import android.os.IBinder
 import android.provider.Settings
 import android.util.TypedValue
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
@@ -79,10 +80,12 @@ class FocusBlockerService : Service() {
       val intent = Intent(context, FocusBlockerService::class.java).apply {
         action = ACTION_START
       }
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        context.startForegroundService(intent)
-      } else {
-        context.startService(intent)
+      runCatching {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+          context.startForegroundService(intent)
+        } else {
+          context.startService(intent)
+        }
       }
     }
 
@@ -218,8 +221,8 @@ class FocusBlockerService : Service() {
           detectForegroundPackage()
         }
 
-        if (fgPkg != null && fgPkg != packageName) {
-          if (blocked.contains(fgPkg)) {
+        if (fgPkg != null) {
+          if (fgPkg != packageName && blocked.contains(fgPkg)) {
             val appName = resolveAppName(fgPkg)
             FocusStateHolder.markInterceptedApp(appName)
             if (Settings.canDrawOverlays(this@FocusBlockerService)) {
@@ -229,11 +232,9 @@ class FocusBlockerService : Service() {
             } else {
               bringAppToFront()
             }
-          } else if (fgPkg == packageName) {
+          } else {
             removeShieldOverlay()
           }
-        } else if (fgPkg == packageName) {
-          removeShieldOverlay()
         }
       }
     }
@@ -242,7 +243,7 @@ class FocusBlockerService : Service() {
   private fun detectForegroundPackage(): String? {
     val usm = getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager ?: return null
     val now = System.currentTimeMillis()
-    val events = usm.queryEvents(now - 5000L, now)
+    val events = usm.queryEvents(now - 10_000L, now)
     val event = UsageEvents.Event()
     var latestPkg: String? = null
     var latestTime = 0L
@@ -259,6 +260,15 @@ class FocusBlockerService : Service() {
         latestTime = event.timeStamp
         latestPkg = event.packageName
       }
+    }
+
+    if (latestPkg == null) {
+      val stats = usm.queryUsageStats(UsageStatsManager.INTERVAL_DAILY, now - 60_000L, now)
+      latestPkg = stats
+        ?.asSequence()
+        ?.filter { it.lastTimeUsed > 0L }
+        ?.maxByOrNull { it.lastTimeUsed }
+        ?.packageName
     }
 
     if (latestPkg != null) {
@@ -281,11 +291,22 @@ class FocusBlockerService : Service() {
     val wm = getSystemService(Context.WINDOW_SERVICE) as? WindowManager ?: return
     val locCtx = LocaleHelper.createLocalizedContext(this, currentSettings.languageCode)
 
-    val container = LinearLayout(this).apply {
+    val container = object : LinearLayout(this) {
+      override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
+          removeShieldOverlay()
+          bringAppToFront()
+          return true
+        }
+        return super.dispatchKeyEvent(event)
+      }
+    }.apply {
       orientation = LinearLayout.VERTICAL
       gravity = Gravity.CENTER
+      isFocusableInTouchMode = true
       setBackgroundColor(Color.parseColor("#F50B1120"))
       setPadding(dp(28), dp(48), dp(28), dp(48))
+      requestFocus()
     }
 
     val card = LinearLayout(this).apply {
@@ -366,8 +387,7 @@ class FocusBlockerService : Service() {
       WindowManager.LayoutParams.MATCH_PARENT,
       WindowManager.LayoutParams.MATCH_PARENT,
       layoutType,
-      WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-        WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+      WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
       PixelFormat.TRANSLUCENT
     ).apply {
       gravity = Gravity.CENTER

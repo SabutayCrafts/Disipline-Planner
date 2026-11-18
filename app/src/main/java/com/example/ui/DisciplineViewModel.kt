@@ -21,9 +21,12 @@ package com.example.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.alarm.AlarmHelper
+import com.example.alarm.AlarmRepeatMode
 import com.example.data.local.AppDatabase
 import com.example.data.local.AppSettings
 import com.example.data.local.SettingsDataStore
+import com.example.data.local.entity.AlarmEntity
 import com.example.data.local.entity.FocusSessionEntity
 import com.example.data.local.entity.HabitEntity
 import com.example.data.repository.DisciplineRepository
@@ -53,10 +56,18 @@ class DisciplineViewModel(application: Application) : AndroidViewModel(applicati
   private val repository = DisciplineRepository(
     database.habitDao(),
     database.habitLogDao(),
-    database.focusSessionDao()
+    database.focusSessionDao(),
+    database.alarmDao()
   )
 
   val todayDateString = repository.getTodayDateString()
+
+  val scheduledAlarms: StateFlow<List<AlarmEntity>> = repository.getAllAlarms()
+    .stateIn(
+      scope = viewModelScope,
+      started = SharingStarted.WhileSubscribed(5000),
+      initialValue = emptyList()
+    )
 
   // App Settings (Language, Blocked Apps, DND, Audio & Haptics)
   val appSettings: StateFlow<AppSettings> = settingsDataStore.settingsFlow
@@ -182,7 +193,7 @@ class DisciplineViewModel(application: Application) : AndroidViewModel(applicati
     alarmEnabled: Boolean
   ) {
     viewModelScope.launch {
-      repository.insertHabit(
+      val habitId = repository.insertHabit(
         HabitEntity(
           title = title,
           description = description,
@@ -192,19 +203,103 @@ class DisciplineViewModel(application: Application) : AndroidViewModel(applicati
           alarmEnabled = alarmEnabled
         )
       )
+      if (alarmEnabled && reminderHour != null && reminderMinute != null) {
+        persistAndScheduleAlarmInternal(
+          title = title,
+          hour = reminderHour,
+          minute = reminderMinute,
+          repeatMode = AlarmRepeatMode.EVERY_DAY,
+          linkedHabitId = habitId
+        )
+      }
     }
   }
 
   fun updateHabit(habit: HabitEntity) {
     viewModelScope.launch {
       repository.updateHabit(habit)
+      if (habit.alarmEnabled && habit.reminderHour != null && habit.reminderMinute != null) {
+        persistAndScheduleAlarmInternal(
+          title = habit.title,
+          hour = habit.reminderHour,
+          minute = habit.reminderMinute,
+          repeatMode = AlarmRepeatMode.EVERY_DAY,
+          linkedHabitId = habit.id
+        )
+      }
     }
   }
 
   fun deleteHabit(habitId: Long) {
     viewModelScope.launch {
+      val existingAlarm = repository.getAlarmByHabitId(habitId)
+      if (existingAlarm != null) {
+        AlarmHelper.cancelInAppAlarm(getApplication(), existingAlarm.id)
+      }
       repository.deleteHabit(habitId)
     }
+  }
+
+  fun saveAndScheduleAlarm(
+    title: String,
+    hour: Int,
+    minute: Int,
+    repeatMode: AlarmRepeatMode,
+    linkedHabitId: Long? = null
+  ) {
+    viewModelScope.launch {
+      persistAndScheduleAlarmInternal(title, hour, minute, repeatMode, linkedHabitId)
+    }
+  }
+
+  fun toggleAlarmEnabled(alarm: AlarmEntity, enabled: Boolean) {
+    viewModelScope.launch {
+      val updated = alarm.copy(isEnabled = enabled)
+      repository.updateAlarm(updated)
+      if (enabled) {
+        AlarmHelper.scheduleInAppAlarm(getApplication(), updated)
+      } else {
+        AlarmHelper.cancelInAppAlarm(getApplication(), updated.id)
+      }
+    }
+  }
+
+  fun deleteAlarm(alarm: AlarmEntity) {
+    viewModelScope.launch {
+      AlarmHelper.cancelInAppAlarm(getApplication(), alarm.id)
+      repository.deleteAlarm(alarm.id)
+    }
+  }
+
+  private suspend fun persistAndScheduleAlarmInternal(
+    title: String,
+    hour: Int,
+    minute: Int,
+    repeatMode: AlarmRepeatMode,
+    linkedHabitId: Long?
+  ) {
+    val existing = linkedHabitId?.let { repository.getAlarmByHabitId(it) }
+    val alarm = if (existing != null) {
+      existing.copy(
+        title = title,
+        hour = hour,
+        minute = minute,
+        repeatMode = repeatMode.name,
+        isEnabled = true
+      )
+    } else {
+      AlarmEntity(
+        title = title,
+        hour = hour,
+        minute = minute,
+        repeatMode = repeatMode.name,
+        isEnabled = true,
+        linkedHabitId = linkedHabitId
+      )
+    }
+    val rowId = repository.insertOrUpdateAlarm(alarm)
+    val saved = alarm.copy(id = if (alarm.id > 0L) alarm.id else rowId)
+    AlarmHelper.scheduleInAppAlarm(getApplication(), saved)
   }
 
   // Focus Blocker & Timer Controls
@@ -236,8 +331,10 @@ class DisciplineViewModel(application: Application) : AndroidViewModel(applicati
     FocusStateHolder.markInterceptedApp(null)
   }
 
-  fun refreshPermissions() {
-    _permissionsStatus.value = FocusPermissionHelper.checkPermissions(getApplication())
+  fun refreshPermissions(): FocusPermissionsStatus {
+    val updated = FocusPermissionHelper.checkPermissions(getApplication())
+    _permissionsStatus.value = updated
+    return updated
   }
 
   fun loadInstalledApps() {

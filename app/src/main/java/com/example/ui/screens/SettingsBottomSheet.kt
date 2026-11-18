@@ -206,11 +206,10 @@ fun SettingsBottomSheet(
           horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
           OutlinedButton(
-            onClick = {
-              onDismiss()
-              onOpenBlockedApps()
-            },
-            modifier = Modifier.weight(1f),
+            onClick = onOpenBlockedApps,
+            modifier = Modifier
+              .weight(1f)
+              .testTag("settings_choose_apps_btn"),
             border = BorderStroke(1.dp, PrimaryBlueLight.copy(alpha = 0.6f)),
             shape = RoundedCornerShape(12.dp)
           ) {
@@ -220,11 +219,10 @@ fun SettingsBottomSheet(
           }
 
           OutlinedButton(
-            onClick = {
-              onDismiss()
-              onOpenPermissions()
-            },
-            modifier = Modifier.weight(1f),
+            onClick = onOpenPermissions,
+            modifier = Modifier
+              .weight(1f)
+              .testTag("settings_permissions_btn"),
             border = BorderStroke(1.dp, SurfaceBorder),
             shape = RoundedCornerShape(12.dp)
           ) {
